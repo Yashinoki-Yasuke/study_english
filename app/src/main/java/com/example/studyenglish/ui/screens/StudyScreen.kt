@@ -1,5 +1,6 @@
 package com.example.studyenglish.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,11 +29,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import com.example.studyenglish.ui.ads.BannerAd
+import com.example.studyenglish.ui.ads.InterstitialAdManager
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -83,6 +86,11 @@ fun StudyCards(
     val speaker = remember { WordSpeaker(context) }
     DisposableEffect(Unit) { onDispose { speaker.shutdown() } }
 
+    // 学習終了（画面を離れる）時に区切りの全画面広告を表示
+    LaunchedEffect(Unit) { InterstitialAdManager.preload(context) }
+    fun leave() { InterstitialAdManager.maybeShow(context) { onBack() } }
+    BackHandler { leave() }
+
     var index by remember { mutableIntStateOf(0) }
     var showAnswer by remember { mutableStateOf(false) }
 
@@ -91,7 +99,7 @@ fun StudyCards(
             TopAppBar(
                 title = { Text(title) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { leave() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
                     }
                 },

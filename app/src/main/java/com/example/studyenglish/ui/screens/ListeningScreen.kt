@@ -1,5 +1,6 @@
 package com.example.studyenglish.ui.screens
 
+import androidx.activity.compose.BackHandler
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -37,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import com.example.studyenglish.ui.ads.BannerAd
+import com.example.studyenglish.ui.ads.InterstitialAdManager
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -115,12 +117,17 @@ fun ListeningScreen(
         }
     }
 
+    // リスニング終了（画面を離れる）時に区切りの全画面広告を表示
+    LaunchedEffect(Unit) { InterstitialAdManager.preload(context) }
+    fun leave() { InterstitialAdManager.maybeShow(context) { onBack() } }
+    BackHandler { leave() }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(title.ifEmpty { "発音リスニング" }) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { leave() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
                     }
                 },
