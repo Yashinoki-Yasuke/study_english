@@ -378,6 +378,44 @@ const OVERRIDE = {
   fortunate: "幸運な（こううんな）", alright: "問題ない（もんだいない）", hello: "こんにちは",
   hunger: "空腹（くうふく）", ashamed: "恥ずかしい（はずかしい）", found: "創設する（そうせつする）",
   thirst: "のどの渇き（のどのかわき）",
+  // ビジネス英語(BSL)の補正
+  goods: "品物（しなもの）", hedge: "ヘッジ", impact: "影響（えいきょう）", authority: "権限（けんげん）",
+  obtain: "入手する（にゅうしゅする）", publish: "出版する（しゅっぱんする）", sometime: "いつか",
+  seller: "売り手（うりて）", merger: "合併（がっぺい）", depreciation: "減価償却（げんかしょうきゃく）",
+  aggregate: "総計（そうけい）", rose: "バラ", retailer: "小売業者（こうりぎょうしゃ）",
+  creditor: "債権者（さいけんしゃ）", derivative: "デリバティブ", surplus: "余剰（よじょう）",
+  disclosure: "開示（かいじ）", risky: "リスクの高い（リスクのたかい）", outstanding: "傑出した（けっしゅつした）",
+  beta: "ベータ", gross: "総額（そうがく）", liquidity: "流動性（りゅうどうせい）",
+  accountant: "会計士（かいけいし）", trader: "トレーダー", profitable: "利益の出る（りえきのでる）",
+  classify: "分類する（ぶんるいする）", receipt: "領収書（りょうしゅうしょ）", effectiveness: "有効性（ゆうこうせい）",
+  bound: "境界（きょうかい）", flexibility: "柔軟性（じゅうなんせい）", debtor: "債務者（さいむしゃ）",
+  carrier: "運送業者（うんそうぎょうしゃ）", click: "クリック", governance: "ガバナンス",
+  rebel: "反逆者（はんぎゃくしゃ）", arbitrage: "アービトラージ", execute: "執行する（しっこうする）",
+  deem: "みなす", allowance: "手当（てあて）", assignment: "割り当て（わりあて）", workforce: "労働力（ろうどうりょく）",
+  parliament: "議会（ぎかい）", utility: "有用性（ゆうようせい）", overhead: "間接費（かんせつひ）",
+  deviation: "偏差（へんさ）", equilibrium: "均衡（きんこう）", turnover: "売上高（うりあげだか）",
+  criteria: "判断基準（はんだんきじゅん）", nominal: "名目上の（めいもくじょうの）", optimal: "最適な（さいてきな）",
+  interval: "間隔（かんかく）", defer: "延期する（えんきする）", expertise: "専門知識（せんもんちしき）",
+  emission: "排出（はいしゅつ）", allocate: "割り当てる（わりあてる）", valuation: "評価額（ひょうかがく）",
+  aspect: "側面（そくめん）", allocation: "配分（はいぶん）",
+  // TOEIC英単語(TSL)の補正
+  sincerely: "誠実に（せいじつに）", downtown: "中心街（ちゅうしんがい）", clerk: "店員（てんいん）",
+  enclose: "同封する（どうふうする）", caller: "発信者（はっしんしゃ）", infer: "推論する（すいろんする）",
+  waiter: "ウェイター", reception: "受付（うけつけ）", preview: "プレビュー", oval: "楕円（だえん）",
+  receptionist: "受付係（うけつけがかり）", reschedule: "予定を変更する（よていをへんこうする）",
+  renovation: "改装（かいそう）", underline: "下線を引く（かせんをひく）", comprehension: "読解（どっかい）",
+  banquet: "宴会（えんかい）", closet: "クローゼット", sunny: "晴れた（はれた）", aisle: "通路（つうろ）",
+  itinerary: "旅程（りょてい）", baggage: "手荷物（てにもつ）", submission: "提出（ていしゅつ）",
+  bulletin: "掲示（けいじ）", briefcase: "書類かばん（しょるいかばん）", commuter: "通勤者（つうきんしゃ）",
+  photographer: "写真家（しゃしんか）", password: "パスワード", cart: "カート", delicious: "おいしい",
+  shuttle: "送迎バス（そうげいバス）", refreshment: "軽食（けいしょく）", annoy: "いらいらさせる",
+  hike: "ハイキング", midnight: "真夜中（まよなか）", rainy: "雨の（あめの）", relocate: "移転する（いてんする）",
+  courier: "宅配業者（たくはいぎょうしゃ）", dock: "波止場（はとば）", presenter: "発表者（はっぴょうしゃ）",
+  bookstore: "書店（しょてん）", dental: "歯科の（しかの）", patron: "常連客（じょうれんきゃく）",
+  garbage: "ゴミ", cab: "タクシー", sculpture: "彫刻（ちょうこく）", illogical: "非論理的な（ひろんりてきな）",
+  conductor: "指揮者（しきしゃ）", congratulation: "おめでとう", paycheck: "給与（きゅうよ）",
+  sidewalk: "歩道（ほどう）", soup: "スープ", cashier: "レジ係（レジがかり）", fountain: "噴水（ふんすい）",
+  juice: "ジュース", lane: "レーン",
 };
 
 // ---- 1. NGSL ----
@@ -456,6 +494,31 @@ for (const b of bands) {
   courses.push({ name: b.name, description: b.desc, lessons });
 }
 
+// ---- 3.5 追加リスト（BSL: ビジネス, TSL: TOEIC） NGSL重複を除外 ----
+const usedWords = new Set(ngsl.map(r => r.word.toLowerCase()));
+function extraCourse(file, name, desc, prefix) {
+  const rows = fs.readFileSync(path.join(__dirname, file), "utf8").split(/\r?\n/).slice(1);
+  const list = [];
+  const seen = new Set();
+  for (const row of rows) {
+    const w = (row.split(",")[0] || "").trim().toLowerCase();
+    if (!/^[a-z][a-z'-]*$/.test(w)) continue;
+    if (usedWords.has(w) || seen.has(w) || STOP.has(w)) continue;
+    seen.add(w);
+    const jp = jpFor(w);
+    if (!jp) continue;
+    usedWords.add(w); // 後続リストで重複しないよう記録
+    list.push({ english: w, japanese: jp, type: "word" });
+  }
+  const lessons = [];
+  for (let i = 0; i < list.length; i += LESSON_SIZE) {
+    lessons.push({ title: `${prefix} ${Math.floor(i / LESSON_SIZE) + 1}`, words: list.slice(i, i + LESSON_SIZE) });
+  }
+  courses.push({ name, description: desc, lessons });
+}
+extraCourse("bsl.csv", "ビジネス英語", "仕事で使うビジネス語彙（BSL）", "ビジネス");
+extraCourse("tsl.csv", "TOEIC英単語", "TOEIC頻出の語彙（TSL）", "TOEIC");
+
 // ---- 4. Tatoeba フレーズ ----
 const lines = fs.readFileSync(path.join(__dirname, "jpn.txt"), "utf8").split("\n");
 const seenP = new Set();
@@ -477,7 +540,7 @@ for (let i = 0; i < phrases.length; i += 15) pLessons.push({ title: `フレー�
 courses.push({ name: "よく使うフレーズ（熟語）", description: "日常でよく使う短い表現", lessons: pLessons });
 
 const out = {
-  attribution: "単語の見出し語: NGSL (Browne, Culligan & Phillips, CC BY-SA 4.0) / 日本語訳: JMdict (© EDRDG, CC BY-SA 4.0) / フレーズ: Tatoeba Project (CC BY 2.0 FR)",
+  attribution: "単語の見出し語: NGSL / BSL / TSL (Browne, Culligan & Phillips, CC BY-SA 4.0) / 日本語訳: JMdict (© EDRDG, CC BY-SA 4.0) / フレーズ: Tatoeba Project (CC BY 2.0 FR)",
   courses,
 };
 fs.writeFileSync(path.join(__dirname, "vocab.json"), JSON.stringify(out));
