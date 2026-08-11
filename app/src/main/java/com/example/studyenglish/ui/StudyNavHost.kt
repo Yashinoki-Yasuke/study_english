@@ -14,7 +14,7 @@ import com.example.studyenglish.ui.screens.CourseListScreen
 import com.example.studyenglish.ui.screens.HomeScreen
 import com.example.studyenglish.ui.screens.LessonListScreen
 import com.example.studyenglish.ui.screens.ListeningScreen
-import com.example.studyenglish.ui.screens.PlaceholderScreen
+import com.example.studyenglish.ui.screens.QuizScreen
 import com.example.studyenglish.ui.screens.StudyScreen
 import com.example.studyenglish.ui.screens.WordListScreen
 
@@ -32,7 +32,7 @@ object Routes {
     const val WORDS = "words/{lessonId}/{lessonTitle}"
     const val STUDY = "study/{lessonId}/{lessonTitle}"
     const val LISTENING = "listening/{lessonId}/{lessonTitle}"
-    const val QUIZ = "quiz"
+    const val QUIZ = "quiz/{lessonId}/{lessonTitle}"
 
     fun lessons(courseId: Long, courseName: String) =
         "lessons/$courseId/${Uri.encode(courseName)}"
@@ -45,6 +45,9 @@ object Routes {
 
     fun listening(lessonId: Long, lessonTitle: String) =
         "listening/$lessonId/${Uri.encode(lessonTitle)}"
+
+    fun quiz(lessonId: Long, lessonTitle: String) =
+        "quiz/$lessonId/${Uri.encode(lessonTitle)}"
 }
 
 @Composable
@@ -54,9 +57,9 @@ fun StudyNavHost() {
         composable(Routes.HOME) {
             HomeScreen(
                 onOpenCourses = { navController.navigate(Routes.COURSES) },
-                // リスニングもコースから対象レッスンを選んで開始する
+                // リスニング・クイズもコースから対象レッスンを選んで開始する
                 onOpenListening = { navController.navigate(Routes.COURSES) },
-                onOpenQuiz = { navController.navigate(Routes.QUIZ) },
+                onOpenQuiz = { navController.navigate(Routes.COURSES) },
             )
         }
         composable(Routes.COURSES) {
@@ -99,6 +102,7 @@ fun StudyNavHost() {
                 lessonTitle = lessonTitle,
                 onBack = { navController.popBackStack() },
                 onStudy = { navController.navigate(Routes.study(lessonId, lessonTitle)) },
+                onQuiz = { navController.navigate(Routes.quiz(lessonId, lessonTitle)) },
                 onListen = { navController.navigate(Routes.listening(lessonId, lessonTitle)) },
             )
         }
@@ -132,8 +136,20 @@ fun StudyNavHost() {
                 onBack = { navController.popBackStack() },
             )
         }
-        composable(Routes.QUIZ) {
-            PlaceholderScreen(title = "クイズ", onBack = { navController.popBackStack() })
+        composable(
+            Routes.QUIZ,
+            arguments = listOf(
+                navArgument("lessonId") { type = NavType.LongType },
+                navArgument("lessonTitle") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val lessonId = entry.arguments?.getLong("lessonId") ?: 0L
+            val lessonTitle = entry.arguments?.getString("lessonTitle").orEmpty()
+            QuizScreen(
+                lessonId = lessonId,
+                lessonTitle = lessonTitle,
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }

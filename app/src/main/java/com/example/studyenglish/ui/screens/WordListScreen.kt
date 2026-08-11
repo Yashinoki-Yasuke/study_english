@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Headset
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -37,6 +38,7 @@ fun WordListScreen(
     lessonTitle: String,
     onBack: () -> Unit,
     onStudy: () -> Unit,
+    onQuiz: () -> Unit,
     onListen: () -> Unit,
 ) {
     val repository = rememberRepository()
@@ -71,6 +73,16 @@ fun WordListScreen(
                     Icon(Icons.Filled.School, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
                     Text("カードで学習する")
+                }
+                Button(
+                    onClick = onQuiz,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                ) {
+                    Icon(Icons.Filled.Quiz, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("クイズに挑戦する")
                 }
                 Button(
                     onClick = onListen,
