@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.example.studyenglish.ui.ads.BannerAd
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +52,8 @@ fun HomeScreen(
                     }
                 },
             )
-        }
+        },
+        bottomBar = { BannerAd() },
     ) { innerPadding ->
         Column(
             modifier = Modifier

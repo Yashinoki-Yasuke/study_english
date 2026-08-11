@@ -58,5 +58,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.media)
+    implementation(libs.play.services.ads)
     debugImplementation(libs.androidx.ui.tooling)
 }
