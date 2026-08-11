@@ -17,6 +17,8 @@ private const val TEST_BANNER_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
 
 @Composable
 fun BannerAd(modifier: Modifier = Modifier) {
+    // 画面ごとに新しいAdViewを生成→表示のたびに広告が読み込まれる。
+    // 画面を離れるとき(onRelease)に破棄してリークを防ぐ。
     AndroidView(
         modifier = modifier.fillMaxWidth(),
         factory = { context ->
@@ -26,5 +28,6 @@ fun BannerAd(modifier: Modifier = Modifier) {
                 loadAd(AdRequest.Builder().build())
             }
         },
+        onRelease = { it.destroy() },
     )
 }

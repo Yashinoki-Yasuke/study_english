@@ -23,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import com.example.studyenglish.ui.ads.BannerAd
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -92,7 +93,8 @@ fun VoiceSettingsScreen(onBack: () -> Unit) {
                     }
                 },
             )
-        }
+        },
+        bottomBar = { BannerAd() },
     ) { innerPadding ->
         if (voices.isEmpty()) {
             Box(
