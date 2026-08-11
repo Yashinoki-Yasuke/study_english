@@ -8,7 +8,8 @@ data class PlaybackState(
     /** セッションが読み込まれているか（再生画面が有効か） */
     val active: Boolean = false,
     val isPlaying: Boolean = false,
-    val lessonId: Long = -1,
+    /** 再生対象の識別子（"lesson:ID" または "course:ID"） */
+    val sourceKey: String = "",
     val lessonTitle: String = "",
     /** 現在の単語のインデックス（0始まり） */
     val index: Int = 0,

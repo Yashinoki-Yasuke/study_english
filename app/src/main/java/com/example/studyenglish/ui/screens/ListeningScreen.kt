@@ -59,15 +59,15 @@ import com.example.studyenglish.data.SettingsStore
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListeningScreen(
-    lessonId: Long,
-    lessonTitle: String,
+    sourceKey: String,
+    title: String,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val state by PlaybackBus.state.collectAsState()
 
-    // このレッスンのセッションが有効か
-    val activeForThisLesson = state.active && state.lessonId == lessonId
+    // この対象のセッションが有効か
+    val activeForThisLesson = state.active && state.sourceKey == sourceKey
 
     // 再生前に選んでおくリピート設定（再生中はサービスの状態を優先）
     var repeatDesired by remember { mutableStateOf(false) }
@@ -92,7 +92,7 @@ fun ListeningScreen(
         ActivityResultContracts.RequestPermission()
     ) { _ ->
         // 許可の可否にかかわらず再生を開始（通知が出ないだけで再生は可能）
-        ListeningService.start(context, lessonId, lessonTitle, repeatDesired)
+        ListeningService.start(context, sourceKey, title, repeatDesired)
     }
 
     fun startListening() {
@@ -102,7 +102,7 @@ fun ListeningScreen(
         ) {
             notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         } else {
-            ListeningService.start(context, lessonId, lessonTitle, repeatDesired)
+            ListeningService.start(context, sourceKey, title, repeatDesired)
         }
     }
 
@@ -117,7 +117,7 @@ fun ListeningScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(lessonTitle.ifEmpty { "発音リスニング" }) },
+                title = { Text(title.ifEmpty { "発音リスニング" }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")

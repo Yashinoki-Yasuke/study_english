@@ -53,7 +53,7 @@ class ListeningService : Service() {
         .build()
 
     private var words: List<Word> = emptyList()
-    private var lessonId: Long = -1
+    private var sourceKey: String = ""
     private var lessonTitle: String = ""
     private var index = 0
     private var speakingEnglish = true
@@ -108,12 +108,12 @@ class ListeningService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
-                val newLessonId = intent.getLongExtra(EXTRA_LESSON_ID, -1)
+                val key = intent.getStringExtra(EXTRA_SOURCE_KEY).orEmpty()
                 val title = intent.getStringExtra(EXTRA_LESSON_TITLE).orEmpty()
                 repeat = intent.getBooleanExtra(EXTRA_REPEAT, false)
                 // 5秒以内に startForeground する必要があるため、先に通知を表示
                 goForeground()
-                loadAndStart(newLessonId, title)
+                loadAndStart(key, title)
             }
             ACTION_TOGGLE -> togglePlay()
             ACTION_NEXT -> skip(+1)
@@ -140,14 +140,19 @@ class ListeningService : Service() {
         pauseWordsMs = (pauseEnJaMs * 0.7).toLong().coerceAtLeast(200)
     }
 
-    private fun loadAndStart(newLessonId: Long, title: String) {
-        lessonId = newLessonId
+    private fun loadAndStart(key: String, title: String) {
+        sourceKey = key
         lessonTitle = title
         applySettings()
         if (ttsReady) tts.setSpeechRate(speechRate)
         ioScope.launch {
-            val loaded = AppDatabase.getInstance(applicationContext)
-                .wordDao().getWordsByLessonOnce(newLessonId)
+            val dao = AppDatabase.getInstance(applicationContext).wordDao()
+            val id = key.substringAfter(":", "-1").toLongOrNull() ?: -1L
+            val loaded = if (key.startsWith("course:")) {
+                dao.getWordsByCourseOnce(id)
+            } else {
+                dao.getWordsByLessonOnce(id)
+            }
             withContext(Dispatchers.Main) {
                 words = if (settings.listeningShuffle) loaded.shuffled() else loaded
                 index = 0
@@ -302,7 +307,7 @@ class ListeningService : Service() {
             PlaybackState(
                 active = words.isNotEmpty(),
                 isPlaying = isPlaying,
-                lessonId = lessonId,
+                sourceKey = sourceKey,
                 lessonTitle = lessonTitle,
                 index = index,
                 total = words.size,
@@ -411,15 +416,19 @@ class ListeningService : Service() {
         const val ACTION_TOGGLE_REPEAT = "com.example.studyenglish.action.TOGGLE_REPEAT"
         const val ACTION_APPLY_SETTINGS = "com.example.studyenglish.action.APPLY_SETTINGS"
         const val ACTION_STOP = "com.example.studyenglish.action.STOP"
-        const val EXTRA_LESSON_ID = "lessonId"
+        const val EXTRA_SOURCE_KEY = "sourceKey"
         const val EXTRA_LESSON_TITLE = "lessonTitle"
         const val EXTRA_REPEAT = "repeat"
 
-        fun start(context: Context, lessonId: Long, lessonTitle: String, repeat: Boolean = false) {
+        fun lessonKey(lessonId: Long) = "lesson:$lessonId"
+        fun courseKey(courseId: Long) = "course:$courseId"
+
+        /** sourceKey は "lesson:ID" または "course:ID" */
+        fun start(context: Context, sourceKey: String, title: String, repeat: Boolean = false) {
             val intent = Intent(context, ListeningService::class.java).apply {
                 action = ACTION_START
-                putExtra(EXTRA_LESSON_ID, lessonId)
-                putExtra(EXTRA_LESSON_TITLE, lessonTitle)
+                putExtra(EXTRA_SOURCE_KEY, sourceKey)
+                putExtra(EXTRA_LESSON_TITLE, title)
                 putExtra(EXTRA_REPEAT, repeat)
             }
             context.startForegroundService(intent)

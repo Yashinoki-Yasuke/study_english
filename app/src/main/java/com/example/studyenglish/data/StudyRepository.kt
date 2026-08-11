@@ -38,6 +38,9 @@ class StudyRepository(private val db: AppDatabase) {
     suspend fun wordsOnce(lessonId: Long): List<Word> =
         db.wordDao().getWordsByLessonOnce(lessonId)
 
+    suspend fun wordsByCourseOnce(courseId: Long): List<Word> =
+        db.wordDao().getWordsByCourseOnce(courseId)
+
     fun progress(wordId: Long): Flow<Progress?> =
         db.progressDao().getProgress(wordId)
 

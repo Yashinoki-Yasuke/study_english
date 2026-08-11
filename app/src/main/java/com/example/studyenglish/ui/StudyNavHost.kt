@@ -34,7 +34,7 @@ object Routes {
     const val LESSONS = "lessons/{courseId}/{courseName}"
     const val WORDS = "words/{lessonId}/{lessonTitle}"
     const val STUDY = "study/{lessonId}/{lessonTitle}"
-    const val LISTENING = "listening/{lessonId}/{lessonTitle}"
+    const val LISTENING = "listening/{sourceType}/{sourceId}/{title}"
     const val QUIZ = "quiz/{lessonId}/{lessonTitle}"
     const val SETTINGS = "settings"
     const val STATS = "stats"
@@ -52,7 +52,10 @@ object Routes {
         "study/$lessonId/${Uri.encode(lessonTitle)}"
 
     fun listening(lessonId: Long, lessonTitle: String) =
-        "listening/$lessonId/${Uri.encode(lessonTitle)}"
+        "listening/lesson/$lessonId/${Uri.encode(lessonTitle)}"
+
+    fun listeningCourse(courseId: Long, courseName: String) =
+        "listening/course/$courseId/${Uri.encode(courseName)}"
 
     fun quiz(lessonId: Long, lessonTitle: String) =
         "quiz/$lessonId/${Uri.encode(lessonTitle)}"
@@ -111,6 +114,9 @@ fun StudyNavHost() {
                 onLessonClick = { lesson ->
                     navController.navigate(Routes.words(lesson.id, lesson.title))
                 },
+                onListenCourse = {
+                    navController.navigate(Routes.listeningCourse(courseId, courseName))
+                },
             )
         }
         composable(
@@ -149,15 +155,17 @@ fun StudyNavHost() {
         composable(
             Routes.LISTENING,
             arguments = listOf(
-                navArgument("lessonId") { type = NavType.LongType },
-                navArgument("lessonTitle") { type = NavType.StringType },
+                navArgument("sourceType") { type = NavType.StringType },
+                navArgument("sourceId") { type = NavType.LongType },
+                navArgument("title") { type = NavType.StringType },
             ),
         ) { entry ->
-            val lessonId = entry.arguments?.getLong("lessonId") ?: 0L
-            val lessonTitle = entry.arguments?.getString("lessonTitle").orEmpty()
+            val sourceType = entry.arguments?.getString("sourceType").orEmpty()
+            val sourceId = entry.arguments?.getLong("sourceId") ?: 0L
+            val title = entry.arguments?.getString("title").orEmpty()
             ListeningScreen(
-                lessonId = lessonId,
-                lessonTitle = lessonTitle,
+                sourceKey = "$sourceType:$sourceId",
+                title = title,
                 onBack = { navController.popBackStack() },
             )
         }

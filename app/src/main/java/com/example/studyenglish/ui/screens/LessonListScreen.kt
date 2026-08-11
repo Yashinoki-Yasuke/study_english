@@ -1,12 +1,16 @@
 package com.example.studyenglish.ui.screens
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Headset
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,6 +35,7 @@ fun LessonListScreen(
     courseName: String,
     onBack: () -> Unit,
     onLessonClick: (Lesson) -> Unit,
+    onListenCourse: () -> Unit,
 ) {
     val repository = rememberRepository()
     val lessonsFlow = remember(courseId) { repository.lessons(courseId) }
@@ -54,6 +59,19 @@ fun LessonListScreen(
                 .padding(innerPadding)
                 .padding(16.dp),
         ) {
+            item {
+                // コース全体をまとめて発音リスニング
+                Button(
+                    onClick = onListenCourse,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                ) {
+                    Icon(Icons.Filled.Headset, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("コース全体を聞く（発音リスニング）")
+                }
+            }
             items(lessons) { lesson ->
                 Card(
                     modifier = Modifier

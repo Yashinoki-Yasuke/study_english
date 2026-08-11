@@ -36,6 +36,13 @@ interface WordDao {
     @Query("SELECT * FROM words WHERE lessonId = :lessonId ORDER BY orderIndex ASC")
     suspend fun getWordsByLessonOnce(lessonId: Long): List<Word>
 
+    /** コース全体の単語を、レッスン順・単語順で取得 */
+    @Query(
+        "SELECT w.* FROM words w INNER JOIN lessons l ON w.lessonId = l.id " +
+            "WHERE l.courseId = :courseId ORDER BY l.orderIndex ASC, w.orderIndex ASC"
+    )
+    suspend fun getWordsByCourseOnce(courseId: Long): List<Word>
+
     @Query("SELECT COUNT(*) FROM words")
     fun totalCount(): Flow<Int>
 
