@@ -9,3 +9,8 @@
 .cxx
 local.properties
 /app/build
+
+# リリース署名（絶対にコミットしないこと）
+keystore.properties
+*.jks
+*.keystore
