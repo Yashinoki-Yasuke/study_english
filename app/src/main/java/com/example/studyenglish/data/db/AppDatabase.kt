@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -12,7 +11,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Course::class, Lesson::class, Word::class, Progress::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,23 +29,21 @@ abstract class AppDatabase : RoomDatabase() {
                 val appContext = context.applicationContext
                 val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
                 val db = Room.databaseBuilder(
-                    context.applicationContext,
+                    appContext,
                     AppDatabase::class.java,
                     "study_english.db",
                 )
                     // 開発中はスキーマ変更時に作り直す（リリース前のため）
                     .fallbackToDestructiveMigration()
-                    .addCallback(object : Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            // 初回作成時に語彙データ(assets/vocab.json)を投入
-                            scope.launch {
-                                INSTANCE?.let { SeedData.populate(appContext, it) }
-                            }
-                        }
-                    })
                     .build()
                 INSTANCE = db
+                // コールバック(onCreate)は破壊的マイグレーション時に呼ばれないため、
+                // 「データが空なら投入する」方式で確実にseedする
+                scope.launch {
+                    if (db.courseDao().count() == 0) {
+                        SeedData.populate(appContext, db)
+                    }
+                }
                 db
             }
         }

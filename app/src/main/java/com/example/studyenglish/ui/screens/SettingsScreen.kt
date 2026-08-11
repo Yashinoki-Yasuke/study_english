@@ -159,8 +159,8 @@ fun SettingsScreen(onBack: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("データ出典", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "単語: JMdict (Jitendex / JMdict-Yomitan, © EDRDG) " +
-                        "— CC BY-SA 4.0\n" +
+                    text = "見出し語: NGSL (Browne, Culligan & Phillips) — CC BY-SA 4.0\n" +
+                        "日本語訳: JMdict (© EDRDG) — CC BY-SA 4.0\n" +
                         "フレーズ: Tatoeba Project — CC BY 2.0 (France)",
                     style = MaterialTheme.typography.bodySmall,
                 )
