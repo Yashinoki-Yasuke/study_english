@@ -3,6 +3,8 @@ package com.example.studyenglish.audio
 import android.content.Context
 import android.media.AudioAttributes
 import android.speech.tts.TextToSpeech
+import android.speech.tts.Voice
+import com.example.studyenglish.data.SettingsStore
 import java.util.Locale
 
 /**
@@ -11,8 +13,10 @@ import java.util.Locale
  */
 class WordSpeaker(context: Context) {
 
+    private val settings = SettingsStore(context)
     private var ready = false
     private var pending: (() -> Unit)? = null
+    private var englishVoice: Voice? = null
     private lateinit var tts: TextToSpeech
 
     init {
@@ -25,16 +29,24 @@ class WordSpeaker(context: Context) {
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                         .build()
                 )
+                resolveVoice()
                 pending?.invoke()
                 pending = null
             }
         }
     }
 
-    /** 英語を読み上げる */
+    private fun resolveVoice() {
+        val name = settings.ttsVoice
+        englishVoice = if (name.isBlank()) null else tts.voices?.firstOrNull { it.name == name }
+    }
+
+    /** 英語を読み上げる（設定された音声を使用） */
     fun speakEnglish(text: String) {
         val action: () -> Unit = {
-            tts.language = Locale.US
+            resolveVoice()
+            val v = englishVoice
+            if (v != null) tts.voice = v else tts.language = Locale.US
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "word_speak")
         }
         if (ready) action() else pending = action

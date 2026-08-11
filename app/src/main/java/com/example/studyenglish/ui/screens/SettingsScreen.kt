@@ -38,7 +38,10 @@ import com.example.studyenglish.notification.ReminderScheduler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onOpenVoiceSettings: () -> Unit,
+) {
     val context = LocalContext.current
     val store = remember { SettingsStore(context) }
 
@@ -155,11 +158,30 @@ fun SettingsScreen(onBack: () -> Unit) {
             }
             HorizontalDivider()
 
+            // 英語の音声（TTS Voice）選択
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenVoiceSettings() }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("英語の音声", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "アメリカ英語・イギリス英語などから選べます",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                Text("▶", style = MaterialTheme.typography.titleMedium)
+            }
+            HorizontalDivider()
+
             // データ出典（ライセンス表記）
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("データ出典", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "見出し語: NGSL (Browne, Culligan & Phillips) — CC BY-SA 4.0\n" +
+                    text = "見出し語: NGSL / BSL / TSL / NAWL (Browne, Culligan & Phillips) — CC BY-SA 4.0\n" +
                         "日本語訳: JMdict (© EDRDG) — CC BY-SA 4.0\n" +
                         "フレーズ: Tatoeba Project — CC BY 2.0 (France)",
                     style = MaterialTheme.typography.bodySmall,

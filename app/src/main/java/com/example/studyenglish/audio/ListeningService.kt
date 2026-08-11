@@ -16,6 +16,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -65,6 +66,7 @@ class ListeningService : Service() {
     private var speechRate = 1.0f
     private var pauseEnJaMs = 700L
     private var pauseWordsMs = 500L
+    private var englishVoice: Voice? = null
 
     // 発話ごとに一意のIDを振る（IDを使い回すと onDone が届かなくなるため）
     private var utteranceSeq = 0
@@ -87,6 +89,7 @@ class ListeningService : Service() {
                 // メディア用途として再生（バックグラウンドでのミュート回避）
                 tts.setAudioAttributes(audioAttributes)
                 tts.setSpeechRate(speechRate)
+                resolveVoice()
                 tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {}
                     override fun onError(utteranceId: String?) {}
@@ -124,9 +127,12 @@ class ListeningService : Service() {
                 updateNotification()
             }
             ACTION_APPLY_SETTINGS -> {
-                // 再生中に速度・間隔を反映（シャッフルは次回開始時に適用）
+                // 再生中に速度・間隔・音声を反映（シャッフルは次回開始時に適用）
                 applySettings()
-                if (ttsReady) tts.setSpeechRate(speechRate)
+                if (ttsReady) {
+                    tts.setSpeechRate(speechRate)
+                    resolveVoice()
+                }
             }
             ACTION_STOP -> stopPlaybackAndService()
         }
@@ -138,6 +144,12 @@ class ListeningService : Service() {
         speechRate = settings.listeningSpeed
         pauseEnJaMs = settings.listeningPauseMs.toLong()
         pauseWordsMs = (pauseEnJaMs * 0.7).toLong().coerceAtLeast(200)
+    }
+
+    /** 設定で選ばれた英語音声を解決する（未設定/見つからなければ標準） */
+    private fun resolveVoice() {
+        val name = settings.ttsVoice
+        englishVoice = if (name.isBlank()) null else tts.voices?.firstOrNull { it.name == name }
     }
 
     private fun loadAndStart(key: String, title: String) {
@@ -208,7 +220,8 @@ class ListeningService : Service() {
         val id = "utt_${++utteranceSeq}"
         currentUtteranceId = id
         if (speakingEnglish) {
-            tts.language = Locale.US
+            val v = englishVoice
+            if (v != null) tts.voice = v else tts.language = Locale.US
             tts.speak(word.english, TextToSpeech.QUEUE_FLUSH, null, id)
         } else {
             tts.language = Locale.JAPANESE

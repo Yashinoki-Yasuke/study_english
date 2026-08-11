@@ -19,6 +19,7 @@ import com.example.studyenglish.ui.screens.ReviewScreen
 import com.example.studyenglish.ui.screens.SettingsScreen
 import com.example.studyenglish.ui.screens.StatsScreen
 import com.example.studyenglish.ui.screens.StudyScreen
+import com.example.studyenglish.ui.screens.VoiceSettingsScreen
 import com.example.studyenglish.ui.screens.WordListScreen
 
 /** Application が保持する Repository を取得する */
@@ -37,6 +38,7 @@ object Routes {
     const val LISTENING = "listening/{sourceType}/{sourceId}/{title}"
     const val QUIZ = "quiz/{lessonId}/{lessonTitle}"
     const val SETTINGS = "settings"
+    const val VOICE_SETTINGS = "voice_settings"
     const val STATS = "stats"
     const val REVIEW = "review/{mode}"
 
@@ -78,7 +80,13 @@ fun StudyNavHost() {
             )
         }
         composable(Routes.SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenVoiceSettings = { navController.navigate(Routes.VOICE_SETTINGS) },
+            )
+        }
+        composable(Routes.VOICE_SETTINGS) {
+            VoiceSettingsScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.STATS) {
             StatsScreen(onBack = { navController.popBackStack() })

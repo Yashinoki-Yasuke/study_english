@@ -36,6 +36,11 @@ class SettingsStore(context: Context) {
         get() = prefs.getBoolean(KEY_SHUFFLE, false)
         set(value) = prefs.edit().putBoolean(KEY_SHUFFLE, value).apply()
 
+    /** 英語の音声（TTS Voice名）。空なら端末の標準 */
+    var ttsVoice: String
+        get() = prefs.getString(KEY_VOICE, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_VOICE, value).apply()
+
     companion object {
         private const val KEY_ENABLED = "reminder_enabled"
         private const val KEY_HOUR = "reminder_hour"
@@ -43,5 +48,6 @@ class SettingsStore(context: Context) {
         private const val KEY_SPEED = "listening_speed"
         private const val KEY_PAUSE = "listening_pause"
         private const val KEY_SHUFFLE = "listening_shuffle"
+        private const val KEY_VOICE = "tts_voice"
     }
 }
