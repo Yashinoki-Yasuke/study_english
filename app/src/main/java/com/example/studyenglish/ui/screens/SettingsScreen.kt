@@ -154,6 +154,18 @@ fun SettingsScreen(onBack: () -> Unit) {
                 )
             }
             HorizontalDivider()
+
+            // データ出典（ライセンス表記）
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("データ出典", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = "単語: JMdict (Jitendex / JMdict-Yomitan, © EDRDG) " +
+                        "— CC BY-SA 4.0\n" +
+                        "フレーズ: Tatoeba Project — CC BY 2.0 (France)",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            HorizontalDivider()
         }
     }
 }

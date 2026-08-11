@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Course::class, Lesson::class, Word::class, Progress::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -27,6 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
+                val appContext = context.applicationContext
                 val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
                 val db = Room.databaseBuilder(
                     context.applicationContext,
@@ -38,9 +39,9 @@ abstract class AppDatabase : RoomDatabase() {
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
-                            // 初回作成時にサンプルデータを投入
+                            // 初回作成時に語彙データ(assets/vocab.json)を投入
                             scope.launch {
-                                INSTANCE?.let { SeedData.populate(it) }
+                                INSTANCE?.let { SeedData.populate(appContext, it) }
                             }
                         }
                     })
