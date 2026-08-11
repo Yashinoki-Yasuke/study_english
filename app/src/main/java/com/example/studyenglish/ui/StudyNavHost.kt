@@ -15,6 +15,7 @@ import com.example.studyenglish.ui.screens.HomeScreen
 import com.example.studyenglish.ui.screens.LessonListScreen
 import com.example.studyenglish.ui.screens.ListeningScreen
 import com.example.studyenglish.ui.screens.QuizScreen
+import com.example.studyenglish.ui.screens.SettingsScreen
 import com.example.studyenglish.ui.screens.StudyScreen
 import com.example.studyenglish.ui.screens.WordListScreen
 
@@ -33,6 +34,7 @@ object Routes {
     const val STUDY = "study/{lessonId}/{lessonTitle}"
     const val LISTENING = "listening/{lessonId}/{lessonTitle}"
     const val QUIZ = "quiz/{lessonId}/{lessonTitle}"
+    const val SETTINGS = "settings"
 
     fun lessons(courseId: Long, courseName: String) =
         "lessons/$courseId/${Uri.encode(courseName)}"
@@ -60,7 +62,11 @@ fun StudyNavHost() {
                 // リスニング・クイズもコースから対象レッスンを選んで開始する
                 onOpenListening = { navController.navigate(Routes.COURSES) },
                 onOpenQuiz = { navController.navigate(Routes.COURSES) },
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
             )
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.COURSES) {
             CourseListScreen(
