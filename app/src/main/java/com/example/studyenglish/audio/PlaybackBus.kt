@@ -17,6 +17,8 @@ data class PlaybackState(
     val currentJapanese: String = "",
     /** 現在読み上げているのが英語か（false=日本語） */
     val speakingEnglish: Boolean = true,
+    /** リピート再生（レッスンを繰り返す） */
+    val repeat: Boolean = false,
 )
 
 /**

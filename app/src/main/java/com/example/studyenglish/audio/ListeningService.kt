@@ -57,6 +57,7 @@ class ListeningService : Service() {
     private var index = 0
     private var speakingEnglish = true
     private var isPlaying = false
+    private var repeat = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -90,6 +91,7 @@ class ListeningService : Service() {
             ACTION_START -> {
                 val newLessonId = intent.getLongExtra(EXTRA_LESSON_ID, -1)
                 val title = intent.getStringExtra(EXTRA_LESSON_TITLE).orEmpty()
+                repeat = intent.getBooleanExtra(EXTRA_REPEAT, false)
                 // 5秒以内に startForeground する必要があるため、先に通知を表示
                 goForeground()
                 loadAndStart(newLessonId, title)
@@ -97,6 +99,11 @@ class ListeningService : Service() {
             ACTION_TOGGLE -> togglePlay()
             ACTION_NEXT -> skip(+1)
             ACTION_PREV -> skip(-1)
+            ACTION_TOGGLE_REPEAT -> {
+                repeat = !repeat
+                publishState()
+                updateNotification()
+            }
             ACTION_STOP -> stopPlaybackAndService()
         }
         return START_NOT_STICKY
@@ -180,8 +187,13 @@ class ListeningService : Service() {
             speakingEnglish = true
             index++
             if (index >= words.size) {
-                finishPlayback()
-                return
+                if (repeat) {
+                    // リピートON: 先頭に戻って継続
+                    index = 0
+                } else {
+                    finishPlayback()
+                    return
+                }
             }
             handler.postDelayed({ if (isPlaying) speakCurrent() }, PAUSE_WORDS_MS)
         }
@@ -248,6 +260,7 @@ class ListeningService : Service() {
                 currentEnglish = word?.english.orEmpty(),
                 currentJapanese = word?.japanese.orEmpty(),
                 speakingEnglish = speakingEnglish,
+                repeat = repeat,
             )
         )
     }
@@ -349,15 +362,18 @@ class ListeningService : Service() {
         const val ACTION_TOGGLE = "com.example.studyenglish.action.TOGGLE"
         const val ACTION_NEXT = "com.example.studyenglish.action.NEXT"
         const val ACTION_PREV = "com.example.studyenglish.action.PREV"
+        const val ACTION_TOGGLE_REPEAT = "com.example.studyenglish.action.TOGGLE_REPEAT"
         const val ACTION_STOP = "com.example.studyenglish.action.STOP"
         const val EXTRA_LESSON_ID = "lessonId"
         const val EXTRA_LESSON_TITLE = "lessonTitle"
+        const val EXTRA_REPEAT = "repeat"
 
-        fun start(context: Context, lessonId: Long, lessonTitle: String) {
+        fun start(context: Context, lessonId: Long, lessonTitle: String, repeat: Boolean = false) {
             val intent = Intent(context, ListeningService::class.java).apply {
                 action = ACTION_START
                 putExtra(EXTRA_LESSON_ID, lessonId)
                 putExtra(EXTRA_LESSON_TITLE, lessonTitle)
+                putExtra(EXTRA_REPEAT, repeat)
             }
             context.startForegroundService(intent)
         }

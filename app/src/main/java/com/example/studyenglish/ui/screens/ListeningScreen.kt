@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Stop
@@ -26,6 +27,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +38,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -58,11 +63,15 @@ fun ListeningScreen(
     // このレッスンのセッションが有効か
     val activeForThisLesson = state.active && state.lessonId == lessonId
 
+    // 再生前に選んでおくリピート設定（再生中はサービスの状態を優先）
+    var repeatDesired by remember { mutableStateOf(false) }
+    val repeatOn = if (activeForThisLesson) state.repeat else repeatDesired
+
     val notifPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { _ ->
         // 許可の可否にかかわらず再生を開始（通知が出ないだけで再生は可能）
-        ListeningService.start(context, lessonId, lessonTitle)
+        ListeningService.start(context, lessonId, lessonTitle, repeatDesired)
     }
 
     fun startListening() {
@@ -72,7 +81,15 @@ fun ListeningScreen(
         ) {
             notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         } else {
-            ListeningService.start(context, lessonId, lessonTitle)
+            ListeningService.start(context, lessonId, lessonTitle, repeatDesired)
+        }
+    }
+
+    fun toggleRepeat() {
+        if (activeForThisLesson) {
+            ListeningService.sendAction(context, ListeningService.ACTION_TOGGLE_REPEAT)
+        } else {
+            repeatDesired = !repeatDesired
         }
     }
 
@@ -148,7 +165,17 @@ fun ListeningScreen(
                 }
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(16.dp))
+
+            // リピート設定（再生前でも切り替え可能）
+            FilterChip(
+                selected = repeatOn,
+                onClick = { toggleRepeat() },
+                label = { Text(if (repeatOn) "リピート: ON" else "リピート: OFF") },
+                leadingIcon = { Icon(Icons.Filled.Repeat, contentDescription = null) },
+            )
+
+            Spacer(Modifier.height(16.dp))
 
             if (activeForThisLesson) {
                 // 再生コントロール
