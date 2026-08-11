@@ -416,6 +416,49 @@ const OVERRIDE = {
   conductor: "指揮者（しきしゃ）", congratulation: "おめでとう", paycheck: "給与（きゅうよ）",
   sidewalk: "歩道（ほどう）", soup: "スープ", cashier: "レジ係（レジがかり）", fountain: "噴水（ふんすい）",
   juice: "ジュース", lane: "レーン",
+  // アカデミック英語(NAWL)の補正
+  adaptive: "適応的な（てきおうてきな）", alien: "宇宙人（うちゅうじん）", aesthetic: "美的な（びてきな）",
+  ancestor: "祖先（そせん）", antiquity: "古代（こだい）", applause: "拍手（はくしゅ）",
+  articulate: "はっきり話す（はっきりはなす）", artwork: "芸術作品（げいじゅつさくひん）", atomic: "原子の（げんしの）",
+  axiom: "公理（こうり）", bang: "大きな音（おおきなおと）", basin: "盆地（ぼんち）", bat: "コウモリ",
+  bizarre: "奇怪な（きかいな）", bleed: "出血する（しゅっけつする）", calculus: "微積分（びせきぶん）",
+  censor: "検閲する（けんえつする）", conceive: "思い描く（おもいえがく）", conduction: "伝導（でんどう）",
+  cone: "円錐（えんすい）", critique: "批評（ひひょう）", cyclic: "周期的な（しゅうきてきな）", deceive: "だます",
+  dense: "濃い（こい）", descriptor: "記述子（きじゅつし）", dimensional: "次元の（じげんの）",
+  displacement: "変位（へんい）", domination: "支配（しはい）", ecological: "生態学的な（せいたいがくてきな）",
+  elevation: "標高（ひょうこう）", emit: "放つ（はなつ）", emperor: "皇帝（こうてい）",
+  communicative: "意思疎通の（いしそつうの）", coherent: "まとまりのある", bodily: "身体の（しんたいの）",
+  aerosol: "エアロゾル", damp: "湿った（しめった）", decay: "腐る（くさる）", deflection: "偏向（へんこう）",
+  disturbance: "妨害（ぼうがい）", facet: "一面（いちめん）", fertility: "肥沃（ひよく）",
+  flip: "ひっくり返す（ひっくりかえす）", footnote: "脚注（きゃくちゅう）", fracture: "骨折（こっせつ）",
+  fusion: "融合（ゆうごう）", ghost: "幽霊（ゆうれい）", goat: "ヤギ", goodness: "良さ（よさ）",
+  gradient: "勾配（こうばい）", handout: "配布資料（はいふしりょう）", halfway: "途中（とちゅう）",
+  helix: "らせん", hip: "腰（こし）", incidence: "発生率（はっせいりつ）", incredible: "信じられない（しんじられない）",
+  incredibly: "信じられないほど（しんじられないほど）", industrialization: "工業化（こうぎょうか）",
+  inferior: "劣った（おとった）", initiation: "入門（にゅうもん）", inversion: "反転（はんてん）",
+  irrigation: "灌漑（かんがい）", lateral: "側方の（そくほうの）", liver: "肝臓（かんぞう）",
+  marrow: "骨髄（こつずい）", mediate: "仲介する（ちゅうかいする）", metaphor: "比喩（ひゆ）",
+  migrate: "移住する（いじゅうする）", molecular: "分子の（ぶんしの）", monkey: "猿（さる）",
+  morality: "道徳性（どうとくせい）", mortality: "死亡率（しぼうりつ）", motif: "モチーフ",
+  mutation: "突然変異（とつぜんへんい）", naked: "裸の（はだかの）", nicely: "きれいに", nucleus: "核（かく）",
+  onset: "発症（はっしょう）", optical: "光学の（こうがくの）", outer: "外の（そとの）",
+  oxidize: "酸化する（さんかする）", oxygen: "酸素（さんそ）", pardon: "許し（ゆるし）", peasant: "農民（のうみん）",
+  peripheral: "周辺の（しゅうへんの）", pest: "害虫（がいちゅう）", pesticide: "殺虫剤（さっちゅうざい）",
+  philosopher: "哲学者（てつがくしゃ）", polar: "極の（きょくの）", potassium: "カリウム", powder: "粉（こな）",
+  pragmatic: "現実的な（げんじつてきな）", predominantly: "主として（しゅとして）", primitive: "原始的な（げんしてきな）",
+  profound: "深遠な（しんえんな）", psychologist: "心理学者（しんりがくしゃ）", punch: "パンチ", realm: "王国（おうこく）",
+  receptor: "受容体（じゅようたい）", rehabilitation: "リハビリ", replication: "再現（さいげん）",
+  reservoir: "貯水池（ちょすいち）", residue: "残留物（ざんりゅうぶつ）", ridiculous: "ばかばかしい", rope: "ロープ",
+  rub: "擦る（こする）", scripture: "聖典（せいてん）", semantic: "意味論的な（いみろんてきな）",
+  sensation: "センセーション", sexuality: "セクシュアリティ", sin: "罪（つみ）", singular: "単数（たんすう）",
+  slab: "厚板（あついた）", sodium: "ナトリウム", soluble: "可溶性（かようせい）", sphere: "球体（きゅうたい）",
+  splice: "つなぎ合わせる（つなぎあわせる）", strand: "より糸（よりいと）", substrate: "基質（きしつ）",
+  surgical: "外科の（げかの）", sword: "剣（けん）", syllabus: "シラバス", syntax: "構文（こうぶん）",
+  synthesis: "合成（ごうせい）", tense: "時制（じせい）", terminology: "専門用語（せんもんようご）",
+  thermal: "熱の（ねつの）", toxic: "有毒な（ゆうどくな）", tract: "器官（きかん）",
+  transcription: "書き起こし（かきおこし）", transplant: "移植（いしょく）", trivial: "取るに足らない（とるにたらない）",
+  turbulent: "激動の（げきどうの）", tutor: "家庭教師（かていきょうし）", utterance: "発話（はつわ）",
+  vein: "静脈（じょうみゃく）", weave: "織る（おる）",
 };
 
 // ---- 1. NGSL ----
@@ -494,14 +537,13 @@ for (const b of bands) {
   courses.push({ name: b.name, description: b.desc, lessons });
 }
 
-// ---- 3.5 追加リスト（BSL: ビジネス, TSL: TOEIC） NGSL重複を除外 ----
+// ---- 3.5 追加リスト（BSL/TSL/NAWL） NGSL・既出重複を除外 ----
 const usedWords = new Set(ngsl.map(r => r.word.toLowerCase()));
-function extraCourse(file, name, desc, prefix) {
-  const rows = fs.readFileSync(path.join(__dirname, file), "utf8").split(/\r?\n/).slice(1);
+function buildCourse(rawWords, name, desc, prefix) {
   const list = [];
   const seen = new Set();
-  for (const row of rows) {
-    const w = (row.split(",")[0] || "").trim().toLowerCase();
+  for (const raw of rawWords) {
+    const w = String(raw || "").trim().toLowerCase();
     if (!/^[a-z][a-z'-]*$/.test(w)) continue;
     if (usedWords.has(w) || seen.has(w) || STOP.has(w)) continue;
     seen.add(w);
@@ -516,8 +558,18 @@ function extraCourse(file, name, desc, prefix) {
   }
   courses.push({ name, description: desc, lessons });
 }
+function csvWords(file) {
+  return fs.readFileSync(path.join(__dirname, file), "utf8").split(/\r?\n/).slice(1)
+    .map(row => (row.split(",")[0] || "").trim());
+}
+function extraCourse(file, name, desc, prefix) {
+  buildCourse(csvWords(file), name, desc, prefix);
+}
 extraCourse("bsl.csv", "ビジネス英語", "仕事で使うビジネス語彙（BSL）", "ビジネス");
 extraCourse("tsl.csv", "TOEIC英単語", "TOEIC頻出の語彙（TSL）", "TOEIC");
+// NAWL: アカデミック語彙（JSONの見出し語）
+const nawl = JSON.parse(fs.readFileSync(path.join(__dirname, "nawl.json"), "utf8"));
+buildCourse(Object.keys(nawl), "アカデミック英語", "論文・学術で使う語彙（NAWL）", "学術");
 
 // ---- 4. Tatoeba フレーズ ----
 const lines = fs.readFileSync(path.join(__dirname, "jpn.txt"), "utf8").split("\n");
@@ -540,7 +592,7 @@ for (let i = 0; i < phrases.length; i += 15) pLessons.push({ title: `フレー�
 courses.push({ name: "よく使うフレーズ（熟語）", description: "日常でよく使う短い表現", lessons: pLessons });
 
 const out = {
-  attribution: "単語の見出し語: NGSL / BSL / TSL (Browne, Culligan & Phillips, CC BY-SA 4.0) / 日本語訳: JMdict (© EDRDG, CC BY-SA 4.0) / フレーズ: Tatoeba Project (CC BY 2.0 FR)",
+  attribution: "単語の見出し語: NGSL / BSL / TSL / NAWL (Browne, Culligan & Phillips, CC BY-SA 4.0) / 日本語訳: JMdict (© EDRDG, CC BY-SA 4.0) / フレーズ: Tatoeba Project (CC BY 2.0 FR)",
   courses,
 };
 fs.writeFileSync(path.join(__dirname, "vocab.json"), JSON.stringify(out));
