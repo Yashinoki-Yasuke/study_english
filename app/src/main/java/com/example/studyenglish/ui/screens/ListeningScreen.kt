@@ -153,7 +153,11 @@ fun ListeningScreen(
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            text = if (state.speakingEnglish) "🔊 英語を再生中" else "🔊 日本語を再生中",
+                            text = when {
+                                !state.isPlaying -> "⏸ 一時停止中"
+                                state.speakingEnglish -> "🔊 英語を再生中"
+                                else -> "🔊 日本語を再生中"
+                            },
                             style = MaterialTheme.typography.labelMedium,
                         )
                     } else {

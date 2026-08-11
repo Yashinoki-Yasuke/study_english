@@ -59,6 +59,12 @@ class ListeningService : Service() {
     private var isPlaying = false
     private var repeat = false
 
+    // 発話ごとに一意のIDを振る（IDを使い回すと onDone が届かなくなるため）
+    private var utteranceSeq = 0
+    private var currentUtteranceId = ""
+    // スキップ等で、現在の発話終了後に読み直したいときに立てる
+    private var pendingRestart = false
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -75,7 +81,10 @@ class ListeningService : Service() {
                     override fun onStart(utteranceId: String?) {}
                     override fun onError(utteranceId: String?) {}
                     override fun onDone(utteranceId: String?) {
-                        handler.post { onUtteranceDone() }
+                        // 古い（既に置き換えられた）発話の遅延コールバックは無視する
+                        handler.post {
+                            if (utteranceId == currentUtteranceId) onUtteranceDone()
+                        }
                     }
                 })
                 if (startWhenReady) {
@@ -120,6 +129,7 @@ class ListeningService : Service() {
                 index = 0
                 speakingEnglish = true
                 isPlaying = true
+                pendingRestart = false
                 if (words.isEmpty()) {
                     stopPlaybackAndService()
                     return@withContext
@@ -133,17 +143,18 @@ class ListeningService : Service() {
     }
 
     private fun requestAudioFocus(): Boolean {
+        // 既に取得済みなら再要求しない（再要求すると古いリスナーにLOSSが飛び再生が止まるため）
+        if (focusRequest != null) return true
         val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             .setAudioAttributes(audioAttributes)
             .setOnAudioFocusChangeListener { change ->
                 when (change) {
                     AudioManager.AUDIOFOCUS_LOSS,
                     AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                        // 他アプリに奪われたら一時停止
+                        // 他アプリに奪われたら一時停止（発話は中断しない）
                         if (isPlaying) {
                             isPlaying = false
                             handler.removeCallbacksAndMessages(null)
-                            tts.stop()
                             publishState()
                             updateNotification()
                         }
@@ -165,50 +176,64 @@ class ListeningService : Service() {
     private fun speakCurrent() {
         if (!isPlaying || index !in words.indices) return
         val word = words[index]
+        val id = "utt_${++utteranceSeq}"
+        currentUtteranceId = id
         if (speakingEnglish) {
             tts.language = Locale.US
-            tts.speak(word.english, TextToSpeech.QUEUE_FLUSH, null, UTTERANCE_ID)
+            tts.speak(word.english, TextToSpeech.QUEUE_FLUSH, null, id)
         } else {
             tts.language = Locale.JAPANESE
-            tts.speak(word.japanese, TextToSpeech.QUEUE_FLUSH, null, UTTERANCE_ID)
+            tts.speak(word.japanese, TextToSpeech.QUEUE_FLUSH, null, id)
         }
         publishState()
         updateNotification()
     }
 
     private fun onUtteranceDone() {
-        if (!isPlaying) return
+        // スキップ等で再スタート予約がある場合は、その位置から読み直す
+        if (pendingRestart) {
+            pendingRestart = false
+            if (isPlaying) speakCurrent()
+            return
+        }
+        // フェーズ／位置を進める（一時停止中でも位置は進め、再開時に次の発話へ）
         if (speakingEnglish) {
-            // 英語の後、少し間を置いて日本語へ
             speakingEnglish = false
-            handler.postDelayed({ if (isPlaying) speakCurrent() }, PAUSE_EN_JA_MS)
         } else {
-            // 日本語の後、次の単語へ
             speakingEnglish = true
             index++
             if (index >= words.size) {
                 if (repeat) {
-                    // リピートON: 先頭に戻って継続
-                    index = 0
+                    index = 0 // リピートON: 先頭に戻って継続
                 } else {
                     finishPlayback()
                     return
                 }
             }
-            handler.postDelayed({ if (isPlaying) speakCurrent() }, PAUSE_WORDS_MS)
         }
+        if (!isPlaying) {
+            // 一時停止中: 位置だけ更新して待機（再開時にここから読む）
+            publishState()
+            updateNotification()
+            return
+        }
+        // 英語の直後は英日間の間、日本語の直後は単語間の間を空けて次へ
+        val delay = if (!speakingEnglish) PAUSE_EN_JA_MS else PAUSE_WORDS_MS
+        handler.postDelayed({ if (isPlaying && !tts.isSpeaking()) speakCurrent() }, delay)
     }
 
     private fun togglePlay() {
         if (words.isEmpty()) return
         if (isPlaying) {
+            // 一時停止: 発話は中断しない（中断すると次のonDoneが失われるため）。
+            // 次のスケジュールのみ止め、再生中の語は最後まで鳴らす。
             isPlaying = false
             handler.removeCallbacksAndMessages(null)
-            tts.stop()
         } else {
             isPlaying = true
             requestAudioFocus()
-            speakCurrent()
+            // まだ前の語を発話中なら、その完了時のonDoneで自然に継続する
+            if (!tts.isSpeaking()) speakCurrent()
         }
         publishState()
         updateNotification()
@@ -217,11 +242,11 @@ class ListeningService : Service() {
     private fun skip(delta: Int) {
         if (words.isEmpty()) return
         handler.removeCallbacksAndMessages(null)
-        tts.stop()
         index = (index + delta).coerceIn(0, words.size - 1)
         speakingEnglish = true
         if (isPlaying) {
-            speakCurrent()
+            // 発話中なら中断せず、完了後にジャンプ先から読み直す
+            if (tts.isSpeaking()) pendingRestart = true else speakCurrent()
         } else {
             publishState()
             updateNotification()
@@ -353,7 +378,6 @@ class ListeningService : Service() {
     companion object {
         private const val CHANNEL_ID = "listening_channel"
         private const val NOTIF_ID = 1001
-        private const val UTTERANCE_ID = "study_english_utt"
 
         private const val PAUSE_EN_JA_MS = 700L
         private const val PAUSE_WORDS_MS = 500L
