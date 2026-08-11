@@ -20,6 +20,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.example.studyenglish.MainActivity
+import com.example.studyenglish.data.SettingsStore
 import com.example.studyenglish.data.db.AppDatabase
 import com.example.studyenglish.data.db.Word
 import kotlinx.coroutines.CoroutineScope
@@ -59,6 +60,12 @@ class ListeningService : Service() {
     private var isPlaying = false
     private var repeat = false
 
+    // 設定（速度・間隔・シャッフル）
+    private lateinit var settings: SettingsStore
+    private var speechRate = 1.0f
+    private var pauseEnJaMs = 700L
+    private var pauseWordsMs = 500L
+
     // 発話ごとに一意のIDを振る（IDを使い回すと onDone が届かなくなるため）
     private var utteranceSeq = 0
     private var currentUtteranceId = ""
@@ -70,6 +77,8 @@ class ListeningService : Service() {
     override fun onCreate() {
         super.onCreate()
         createChannel()
+        settings = SettingsStore(this)
+        applySettings()
         audioManager = getSystemService(AudioManager::class.java)
         mediaSession = MediaSessionCompat(this, "StudyEnglishListening").apply { isActive = true }
         tts = TextToSpeech(this) { status ->
@@ -77,6 +86,7 @@ class ListeningService : Service() {
                 ttsReady = true
                 // メディア用途として再生（バックグラウンドでのミュート回避）
                 tts.setAudioAttributes(audioAttributes)
+                tts.setSpeechRate(speechRate)
                 tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {}
                     override fun onError(utteranceId: String?) {}
@@ -113,19 +123,33 @@ class ListeningService : Service() {
                 publishState()
                 updateNotification()
             }
+            ACTION_APPLY_SETTINGS -> {
+                // 再生中に速度・間隔を反映（シャッフルは次回開始時に適用）
+                applySettings()
+                if (ttsReady) tts.setSpeechRate(speechRate)
+            }
             ACTION_STOP -> stopPlaybackAndService()
         }
         return START_NOT_STICKY
     }
 
+    /** 設定（速度・間隔・シャッフル）を読み込む */
+    private fun applySettings() {
+        speechRate = settings.listeningSpeed
+        pauseEnJaMs = settings.listeningPauseMs.toLong()
+        pauseWordsMs = (pauseEnJaMs * 0.7).toLong().coerceAtLeast(200)
+    }
+
     private fun loadAndStart(newLessonId: Long, title: String) {
         lessonId = newLessonId
         lessonTitle = title
+        applySettings()
+        if (ttsReady) tts.setSpeechRate(speechRate)
         ioScope.launch {
             val loaded = AppDatabase.getInstance(applicationContext)
                 .wordDao().getWordsByLessonOnce(newLessonId)
             withContext(Dispatchers.Main) {
-                words = loaded
+                words = if (settings.listeningShuffle) loaded.shuffled() else loaded
                 index = 0
                 speakingEnglish = true
                 isPlaying = true
@@ -218,7 +242,7 @@ class ListeningService : Service() {
             return
         }
         // 英語の直後は英日間の間、日本語の直後は単語間の間を空けて次へ
-        val delay = if (!speakingEnglish) PAUSE_EN_JA_MS else PAUSE_WORDS_MS
+        val delay = if (!speakingEnglish) pauseEnJaMs else pauseWordsMs
         handler.postDelayed({ if (isPlaying && !tts.isSpeaking()) speakCurrent() }, delay)
     }
 
@@ -379,14 +403,13 @@ class ListeningService : Service() {
         private const val CHANNEL_ID = "listening_channel"
         private const val NOTIF_ID = 1001
 
-        private const val PAUSE_EN_JA_MS = 700L
-        private const val PAUSE_WORDS_MS = 500L
 
         const val ACTION_START = "com.example.studyenglish.action.START"
         const val ACTION_TOGGLE = "com.example.studyenglish.action.TOGGLE"
         const val ACTION_NEXT = "com.example.studyenglish.action.NEXT"
         const val ACTION_PREV = "com.example.studyenglish.action.PREV"
         const val ACTION_TOGGLE_REPEAT = "com.example.studyenglish.action.TOGGLE_REPEAT"
+        const val ACTION_APPLY_SETTINGS = "com.example.studyenglish.action.APPLY_SETTINGS"
         const val ACTION_STOP = "com.example.studyenglish.action.STOP"
         const val EXTRA_LESSON_ID = "lessonId"
         const val EXTRA_LESSON_TITLE = "lessonTitle"

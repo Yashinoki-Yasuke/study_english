@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Stop
@@ -38,6 +41,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.studyenglish.audio.ListeningService
 import com.example.studyenglish.audio.PlaybackBus
+import com.example.studyenglish.data.SettingsStore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +72,21 @@ fun ListeningScreen(
     // 再生前に選んでおくリピート設定（再生中はサービスの状態を優先）
     var repeatDesired by remember { mutableStateOf(false) }
     val repeatOn = if (activeForThisLesson) state.repeat else repeatDesired
+
+    // 速度・間隔・シャッフル設定（SettingsStoreに保存）
+    val store = remember { SettingsStore(context) }
+    var speed by remember { mutableFloatStateOf(store.listeningSpeed) }
+    var pauseMs by remember { mutableIntStateOf(store.listeningPauseMs) }
+    var shuffle by remember { mutableStateOf(store.listeningShuffle) }
+
+    fun applyToService() {
+        if (activeForThisLesson) {
+            ListeningService.sendAction(context, ListeningService.ACTION_APPLY_SETTINGS)
+        }
+    }
+    fun setSpeed(v: Float) { speed = v; store.listeningSpeed = v; applyToService() }
+    fun setPause(v: Int) { pauseMs = v; store.listeningPauseMs = v; applyToService() }
+    fun setShuffle(v: Boolean) { shuffle = v; store.listeningShuffle = v } // シャッフルは次回開始時に反映
 
     val notifPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -109,9 +130,9 @@ fun ListeningScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = "英語→日本語を交互に再生します。\nアプリを閉じても再生は続きます。",
@@ -171,13 +192,41 @@ fun ListeningScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // リピート設定（再生前でも切り替え可能）
-            FilterChip(
-                selected = repeatOn,
-                onClick = { toggleRepeat() },
-                label = { Text(if (repeatOn) "リピート: ON" else "リピート: OFF") },
-                leadingIcon = { Icon(Icons.Filled.Repeat, contentDescription = null) },
-            )
+            // リピート／シャッフル
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = repeatOn,
+                    onClick = { toggleRepeat() },
+                    label = { Text("リピート") },
+                    leadingIcon = { Icon(Icons.Filled.Repeat, contentDescription = null) },
+                )
+                FilterChip(
+                    selected = shuffle,
+                    onClick = { setShuffle(!shuffle) },
+                    label = { Text("シャッフル") },
+                    leadingIcon = { Icon(Icons.Filled.Shuffle, contentDescription = null) },
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+            // 再生速度
+            Text("再生速度", style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(0.75f to "0.75x", 1.0f to "1.0x", 1.25f to "1.25x", 1.5f to "1.5x").forEach { (v, label) ->
+                    FilterChip(selected = speed == v, onClick = { setSpeed(v) }, label = { Text(label) })
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            // 英語→日本語の間隔
+            Text("間隔（英語→日本語）", style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(400 to "短い", 700 to "普通", 1200 to "長い").forEach { (ms, label) ->
+                    FilterChip(selected = pauseMs == ms, onClick = { setPause(ms) }, label = { Text(label) })
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
