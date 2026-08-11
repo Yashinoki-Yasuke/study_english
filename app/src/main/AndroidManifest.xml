@@ -16,10 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudyEnglish">
 
-        <!-- AdMob アプリID（現在はGoogle公式の「テスト用」。リリース前に本番IDへ差し替える） -->
+        <!-- AdMob アプリID。build.gradle.kts の manifestPlaceholders で
+             debug=テスト用 / release=本番 を自動切り替え -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="${admobAppId}" />
 
         <activity
             android:name=".MainActivity"

@@ -3,6 +3,7 @@ package com.example.studyenglish.ui.ads
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import com.example.studyenglish.BuildConfig
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -14,11 +15,10 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
  * 全画面広告（インタースティシャル）の管理。
  * クイズ結果・学習終了などの「区切り」でのみ表示し、頻度制限で連続表示を防ぐ。
  *
- * ※ 広告ユニットIDは現在 Google公式の「テスト用」。リリース前に本番IDへ差し替えること。
+ * 広告ユニットIDは build.gradle.kts で debug=テスト用 / release=本番 を自動切り替え。
  */
 object InterstitialAdManager {
 
-    private const val TEST_INTERSTITIAL_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
     private const val MIN_INTERVAL_MS = 60_000L // 直前の表示から60秒は出さない
 
     private var ad: InterstitialAd? = null
@@ -31,7 +31,7 @@ object InterstitialAdManager {
         loading = true
         InterstitialAd.load(
             context.applicationContext,
-            TEST_INTERSTITIAL_UNIT_ID,
+            BuildConfig.ADMOB_INTERSTITIAL_ID,
             AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(loaded: InterstitialAd) {

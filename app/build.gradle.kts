@@ -22,7 +22,18 @@ android {
     }
 
     buildTypes {
+        // AdMob ID は debug=テスト用 / release=本番 で自動切り替え。
+        // 開発中に本番広告を自分でタップするとアカウント停止の恐れがあるため。
+        debug {
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+            buildConfigField("String", "ADMOB_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+            buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+        }
         release {
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-2408843234460516~3250881226"
+            buildConfigField("String", "ADMOB_BANNER_ID", "\"ca-app-pub-2408843234460516/7688819687\"")
+            buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-2408843234460516/7129436542\"")
+
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -39,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

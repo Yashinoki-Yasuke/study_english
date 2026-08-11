@@ -4,17 +4,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.studyenglish.BuildConfig
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 
 /**
  * バナー広告。
- * ※ 広告ユニットIDは現在 Google公式の「テスト用」。
- *   リリース前に AdMob で取得した本番の広告ユニットIDへ差し替えること。
+ * 広告ユニットIDは build.gradle.kts で debug=テスト用 / release=本番 を自動切り替え。
  */
-private const val TEST_BANNER_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
-
 @Composable
 fun BannerAd(modifier: Modifier = Modifier) {
     // 画面ごとに新しいAdViewを生成→表示のたびに広告が読み込まれる。
@@ -24,7 +22,7 @@ fun BannerAd(modifier: Modifier = Modifier) {
         factory = { context ->
             AdView(context).apply {
                 setAdSize(AdSize.BANNER)
-                adUnitId = TEST_BANNER_UNIT_ID
+                adUnitId = BuildConfig.ADMOB_BANNER_ID
                 loadAd(AdRequest.Builder().build())
             }
         },
