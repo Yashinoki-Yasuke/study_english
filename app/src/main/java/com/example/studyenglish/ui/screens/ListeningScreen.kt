@@ -1,0 +1,193 @@
+package com.example.studyenglish.ui.screens
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.studyenglish.audio.ListeningService
+import com.example.studyenglish.audio.PlaybackBus
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ListeningScreen(
+    lessonId: Long,
+    lessonTitle: String,
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val state by PlaybackBus.state.collectAsState()
+
+    // このレッスンのセッションが有効か
+    val activeForThisLesson = state.active && state.lessonId == lessonId
+
+    val notifPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        // 許可の可否にかかわらず再生を開始（通知が出ないだけで再生は可能）
+        ListeningService.start(context, lessonId, lessonTitle)
+    }
+
+    fun startListening() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            ListeningService.start(context, lessonId, lessonTitle)
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(lessonTitle.ifEmpty { "発音リスニング" }) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
+                    }
+                },
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = "英語→日本語を交互に再生します。\nアプリを閉じても再生は続きます。",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(24.dp))
+
+            // 現在の単語カード
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    if (activeForThisLesson) {
+                        Text(
+                            text = "${state.index + 1} / ${state.total}",
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = state.currentEnglish,
+                            fontSize = 32.sp,
+                            style = MaterialTheme.typography.headlineMedium,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = state.currentJapanese,
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = if (state.speakingEnglish) "🔊 英語を再生中" else "🔊 日本語を再生中",
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    } else {
+                        Text(
+                            text = "「再生開始」を押してください",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            if (activeForThisLesson) {
+                // 再生コントロール
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    IconButton(onClick = { ListeningService.sendAction(context, ListeningService.ACTION_PREV) }) {
+                        Icon(Icons.Filled.SkipPrevious, contentDescription = "前へ", modifier = Modifier.size(40.dp))
+                    }
+                    FilledIconButton(
+                        onClick = { ListeningService.sendAction(context, ListeningService.ACTION_TOGGLE) },
+                        modifier = Modifier.size(72.dp),
+                    ) {
+                        Icon(
+                            imageVector = if (state.isPlaying)
+                                androidx.compose.material.icons.Icons.Filled.Pause
+                            else Icons.Filled.PlayArrow,
+                            contentDescription = if (state.isPlaying) "一時停止" else "再生",
+                            modifier = Modifier.size(40.dp),
+                        )
+                    }
+                    IconButton(onClick = { ListeningService.sendAction(context, ListeningService.ACTION_NEXT) }) {
+                        Icon(Icons.Filled.SkipNext, contentDescription = "次へ", modifier = Modifier.size(40.dp))
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                OutlinedButton(onClick = { ListeningService.sendAction(context, ListeningService.ACTION_STOP) }) {
+                    Icon(Icons.Filled.Stop, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("停止")
+                }
+            } else {
+                Button(onClick = { startListening() }) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("再生開始")
+                }
+            }
+        }
+    }
+}

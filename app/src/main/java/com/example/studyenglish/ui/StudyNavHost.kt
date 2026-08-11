@@ -13,6 +13,7 @@ import com.example.studyenglish.data.StudyRepository
 import com.example.studyenglish.ui.screens.CourseListScreen
 import com.example.studyenglish.ui.screens.HomeScreen
 import com.example.studyenglish.ui.screens.LessonListScreen
+import com.example.studyenglish.ui.screens.ListeningScreen
 import com.example.studyenglish.ui.screens.PlaceholderScreen
 import com.example.studyenglish.ui.screens.WordListScreen
 
@@ -28,7 +29,7 @@ object Routes {
     const val COURSES = "courses"
     const val LESSONS = "lessons/{courseId}/{courseName}"
     const val WORDS = "words/{lessonId}/{lessonTitle}"
-    const val LISTENING = "listening"
+    const val LISTENING = "listening/{lessonId}/{lessonTitle}"
     const val QUIZ = "quiz"
 
     fun lessons(courseId: Long, courseName: String) =
@@ -36,6 +37,9 @@ object Routes {
 
     fun words(lessonId: Long, lessonTitle: String) =
         "words/$lessonId/${Uri.encode(lessonTitle)}"
+
+    fun listening(lessonId: Long, lessonTitle: String) =
+        "listening/$lessonId/${Uri.encode(lessonTitle)}"
 }
 
 @Composable
@@ -45,7 +49,8 @@ fun StudyNavHost() {
         composable(Routes.HOME) {
             HomeScreen(
                 onOpenCourses = { navController.navigate(Routes.COURSES) },
-                onOpenListening = { navController.navigate(Routes.LISTENING) },
+                // リスニングもコースから対象レッスンを選んで開始する
+                onOpenListening = { navController.navigate(Routes.COURSES) },
                 onOpenQuiz = { navController.navigate(Routes.QUIZ) },
             )
         }
@@ -88,10 +93,23 @@ fun StudyNavHost() {
                 lessonId = lessonId,
                 lessonTitle = lessonTitle,
                 onBack = { navController.popBackStack() },
+                onListen = { navController.navigate(Routes.listening(lessonId, lessonTitle)) },
             )
         }
-        composable(Routes.LISTENING) {
-            PlaceholderScreen(title = "発音リスニング", onBack = { navController.popBackStack() })
+        composable(
+            Routes.LISTENING,
+            arguments = listOf(
+                navArgument("lessonId") { type = NavType.LongType },
+                navArgument("lessonTitle") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val lessonId = entry.arguments?.getLong("lessonId") ?: 0L
+            val lessonTitle = entry.arguments?.getString("lessonTitle").orEmpty()
+            ListeningScreen(
+                lessonId = lessonId,
+                lessonTitle = lessonTitle,
+                onBack = { navController.popBackStack() },
+            )
         }
         composable(Routes.QUIZ) {
             PlaceholderScreen(title = "クイズ", onBack = { navController.popBackStack() })
