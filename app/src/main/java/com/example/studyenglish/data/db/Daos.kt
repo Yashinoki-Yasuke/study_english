@@ -36,6 +36,35 @@ interface WordDao {
     @Query("SELECT * FROM words WHERE lessonId = :lessonId ORDER BY orderIndex ASC")
     suspend fun getWordsByLessonOnce(lessonId: Long): List<Word>
 
+    @Query("SELECT COUNT(*) FROM words")
+    fun totalCount(): Flow<Int>
+
+    /** 苦手(status=2)の単語をまとめて取得 */
+    @Query(
+        "SELECT w.* FROM words w INNER JOIN progress p ON p.wordId = w.id " +
+            "WHERE p.status = 2 ORDER BY p.lastStudiedAt DESC"
+    )
+    fun weakWords(): Flow<List<Word>>
+
+    /** お気に入りの単語をまとめて取得 */
+    @Query(
+        "SELECT w.* FROM words w INNER JOIN progress p ON p.wordId = w.id " +
+            "WHERE p.isFavorite = 1 ORDER BY p.lastStudiedAt DESC"
+    )
+    fun favoriteWords(): Flow<List<Word>>
+
+    @Query(
+        "SELECT w.* FROM words w INNER JOIN progress p ON p.wordId = w.id " +
+            "WHERE p.status = 2 ORDER BY p.lastStudiedAt DESC"
+    )
+    suspend fun weakWordsOnce(): List<Word>
+
+    @Query(
+        "SELECT w.* FROM words w INNER JOIN progress p ON p.wordId = w.id " +
+            "WHERE p.isFavorite = 1 ORDER BY p.lastStudiedAt DESC"
+    )
+    suspend fun favoriteWordsOnce(): List<Word>
+
     @Insert
     suspend fun insert(word: Word): Long
 
@@ -48,6 +77,38 @@ interface ProgressDao {
     @Query("SELECT * FROM progress WHERE wordId = :wordId")
     fun getProgress(wordId: Long): Flow<Progress?>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(progress: Progress)
+    @Query("SELECT COUNT(*) FROM progress WHERE status = 1")
+    fun learnedCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM progress WHERE status = 2")
+    fun weakCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM progress WHERE isFavorite = 1")
+    fun favoriteCount(): Flow<Int>
+
+    /** 進捗行が無ければ作成（既存は変更しない） */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfAbsent(progress: Progress)
+
+    @Query("UPDATE progress SET status = :status, lastStudiedAt = :timestamp WHERE wordId = :wordId")
+    suspend fun updateStatus(wordId: Long, status: Int, timestamp: Long)
+
+    @Query("UPDATE progress SET isFavorite = :favorite WHERE wordId = :wordId")
+    suspend fun updateFavorite(wordId: Long, favorite: Boolean)
+}
+
+@Dao
+interface StudyLogDao {
+    /** その日の学習数を+1（無ければ作成） */
+    @Query(
+        "INSERT INTO study_log(date, studiedCount) VALUES(:date, 1) " +
+            "ON CONFLICT(date) DO UPDATE SET studiedCount = studiedCount + 1"
+    )
+    suspend fun increment(date: String)
+
+    @Query("SELECT date FROM study_log ORDER BY date DESC")
+    fun studyDates(): Flow<List<String>>
+
+    @Query("SELECT studiedCount FROM study_log WHERE date = :date")
+    fun countForDate(date: String): Flow<Int?>
 }

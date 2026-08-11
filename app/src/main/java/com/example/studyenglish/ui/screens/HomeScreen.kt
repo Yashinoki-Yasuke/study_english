@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,6 +37,9 @@ fun HomeScreen(
     onOpenListening: () -> Unit,
     onOpenQuiz: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenStats: () -> Unit,
+    onOpenWeakReview: () -> Unit,
+    onOpenFavoriteReview: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -76,6 +82,24 @@ fun HomeScreen(
                 title = "クイズ",
                 subtitle = "理解度をチェック",
                 onClick = onOpenQuiz,
+            )
+            MenuCard(
+                icon = Icons.Filled.Whatshot,
+                title = "苦手を復習",
+                subtitle = "「苦手」にした単語をまとめて復習",
+                onClick = onOpenWeakReview,
+            )
+            MenuCard(
+                icon = Icons.Filled.Star,
+                title = "お気に入りを復習",
+                subtitle = "★を付けた単語をまとめて復習",
+                onClick = onOpenFavoriteReview,
+            )
+            MenuCard(
+                icon = Icons.Filled.BarChart,
+                title = "学習統計",
+                subtitle = "連続日数・覚えた数などを確認",
+                onClick = onOpenStats,
             )
         }
     }

@@ -2,6 +2,7 @@ package com.example.studyenglish.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -38,11 +41,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.studyenglish.audio.WordSpeaker
+import com.example.studyenglish.data.db.Word
 import com.example.studyenglish.ui.rememberRepository
 import kotlinx.coroutines.launch
 
@@ -53,16 +58,29 @@ fun StudyScreen(
     lessonTitle: String,
     onBack: () -> Unit,
 ) {
+    val repository = rememberRepository()
+    val wordsFlow = remember(lessonId) { repository.words(lessonId) }
+    val words by wordsFlow.collectAsState(initial = emptyList())
+    StudyCards(title = lessonTitle.ifEmpty { "学習" }, words = words, onBack = onBack)
+}
+
+/**
+ * 学習カードの共通UI。レッスン学習・苦手復習・お気に入り復習で共有する。
+ * カードをタップで意味の表示切替、発音再生、覚えた/苦手の記録、★お気に入り、前後移動。
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StudyCards(
+    title: String,
+    words: List<Word>,
+    onBack: () -> Unit,
+) {
     val context = LocalContext.current
     val repository = rememberRepository()
     val scope = rememberCoroutineScope()
-    val wordsFlow = remember(lessonId) { repository.words(lessonId) }
-    val words by wordsFlow.collectAsState(initial = emptyList())
 
     val speaker = remember { WordSpeaker(context) }
-    DisposableEffect(Unit) {
-        onDispose { speaker.shutdown() }
-    }
+    DisposableEffect(Unit) { onDispose { speaker.shutdown() } }
 
     var index by remember { mutableIntStateOf(0) }
     var showAnswer by remember { mutableStateOf(false) }
@@ -70,7 +88,7 @@ fun StudyScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(lessonTitle.ifEmpty { "学習" }) },
+                title = { Text(title) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
@@ -80,16 +98,18 @@ fun StudyScreen(
         }
     ) { innerPadding ->
         if (words.isEmpty()) {
-            Column(
+            Box(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) { Text("単語がありません") }
+                contentAlignment = Alignment.Center,
+            ) { Text("対象の単語がありません") }
             return@Scaffold
         }
 
         val safeIndex = index.coerceIn(0, words.size - 1)
         val word = words[safeIndex]
+        val progress by remember(word.id) { repository.progress(word.id) }
+            .collectAsState(initial = null)
+        val isFavorite = progress?.isFavorite == true
 
         fun goTo(newIndex: Int) {
             index = newIndex.coerceIn(0, words.size - 1)
@@ -113,13 +133,24 @@ fun StudyScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(8.dp))
-            Text(
-                "${safeIndex + 1} / ${words.size}",
-                style = MaterialTheme.typography.labelLarge,
-            )
-            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text("${safeIndex + 1} / ${words.size}", style = MaterialTheme.typography.labelLarge)
+                IconButton(onClick = {
+                    scope.launch { repository.setFavorite(word.id, !isFavorite) }
+                }) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
+                        contentDescription = if (isFavorite) "お気に入り解除" else "お気に入りに追加",
+                        tint = if (isFavorite) Color(0xFFF9A825) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
 
-            // 学習カード（タップで意味の表示切替）
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -129,9 +160,7 @@ fun StudyScreen(
                 ),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
@@ -142,7 +171,6 @@ fun StudyScreen(
                     Text(
                         text = word.english,
                         fontSize = 34.sp,
-                        style = MaterialTheme.typography.headlineMedium,
                         textAlign = TextAlign.Center,
                     )
                     word.phonetic?.let {
@@ -151,19 +179,13 @@ fun StudyScreen(
                     }
                     Spacer(Modifier.height(16.dp))
                     if (showAnswer) {
-                        Text(
-                            text = word.japanese,
-                            style = MaterialTheme.typography.titleLarge,
-                            textAlign = TextAlign.Center,
-                        )
+                        Text(word.japanese, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
                         word.example?.let {
                             Spacer(Modifier.height(8.dp))
                             Text(it, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                         }
                     } else {
-                        TextButton(onClick = { showAnswer = true }) {
-                            Text("タップして意味を表示")
-                        }
+                        TextButton(onClick = { showAnswer = true }) { Text("タップして意味を表示") }
                     }
                 }
             }
@@ -176,26 +198,18 @@ fun StudyScreen(
             }
 
             Spacer(Modifier.height(24.dp))
-            // 覚えた / 苦手
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 FilledTonalButton(onClick = { mark(1) }) { Text("覚えた") }
                 OutlinedButton(onClick = { mark(2) }) { Text("苦手") }
             }
 
             Spacer(Modifier.height(24.dp))
-            // 前後移動
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Button(
-                    onClick = { goTo(safeIndex - 1) },
-                    enabled = safeIndex > 0,
-                ) { Text("前へ") }
-                Button(
-                    onClick = { goTo(safeIndex + 1) },
-                    enabled = safeIndex < words.size - 1,
-                ) { Text("次へ") }
+                Button(onClick = { goTo(safeIndex - 1) }, enabled = safeIndex > 0) { Text("前へ") }
+                Button(onClick = { goTo(safeIndex + 1) }, enabled = safeIndex < words.size - 1) { Text("次へ") }
             }
         }
     }

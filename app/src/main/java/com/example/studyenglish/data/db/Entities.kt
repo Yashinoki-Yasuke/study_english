@@ -69,3 +69,11 @@ data class Progress(
     val isFavorite: Boolean = false,
     val lastStudiedAt: Long? = null,
 )
+
+/** 学習ログ（連続学習日数などの統計用） */
+@Entity(tableName = "study_log")
+data class StudyLog(
+    /** yyyy-MM-dd */
+    @PrimaryKey val date: String,
+    val studiedCount: Int = 0,
+)

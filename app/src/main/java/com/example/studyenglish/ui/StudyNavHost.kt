@@ -15,7 +15,9 @@ import com.example.studyenglish.ui.screens.HomeScreen
 import com.example.studyenglish.ui.screens.LessonListScreen
 import com.example.studyenglish.ui.screens.ListeningScreen
 import com.example.studyenglish.ui.screens.QuizScreen
+import com.example.studyenglish.ui.screens.ReviewScreen
 import com.example.studyenglish.ui.screens.SettingsScreen
+import com.example.studyenglish.ui.screens.StatsScreen
 import com.example.studyenglish.ui.screens.StudyScreen
 import com.example.studyenglish.ui.screens.WordListScreen
 
@@ -35,6 +37,10 @@ object Routes {
     const val LISTENING = "listening/{lessonId}/{lessonTitle}"
     const val QUIZ = "quiz/{lessonId}/{lessonTitle}"
     const val SETTINGS = "settings"
+    const val STATS = "stats"
+    const val REVIEW = "review/{mode}"
+
+    fun review(mode: String) = "review/$mode"
 
     fun lessons(courseId: Long, courseName: String) =
         "lessons/$courseId/${Uri.encode(courseName)}"
@@ -63,10 +69,23 @@ fun StudyNavHost() {
                 onOpenListening = { navController.navigate(Routes.COURSES) },
                 onOpenQuiz = { navController.navigate(Routes.COURSES) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                onOpenStats = { navController.navigate(Routes.STATS) },
+                onOpenWeakReview = { navController.navigate(Routes.review("weak")) },
+                onOpenFavoriteReview = { navController.navigate(Routes.review("favorite")) },
             )
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.STATS) {
+            StatsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(
+            Routes.REVIEW,
+            arguments = listOf(navArgument("mode") { type = NavType.StringType }),
+        ) { entry ->
+            val mode = entry.arguments?.getString("mode").orEmpty()
+            ReviewScreen(mode = mode, onBack = { navController.popBackStack() })
         }
         composable(Routes.COURSES) {
             CourseListScreen(

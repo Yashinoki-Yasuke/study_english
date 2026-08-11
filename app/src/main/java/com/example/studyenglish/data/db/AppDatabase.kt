@@ -10,8 +10,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [Course::class, Lesson::class, Word::class, Progress::class],
-    version = 6,
+    entities = [Course::class, Lesson::class, Word::class, Progress::class, StudyLog::class],
+    version = 7,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -19,6 +19,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun lessonDao(): LessonDao
     abstract fun wordDao(): WordDao
     abstract fun progressDao(): ProgressDao
+    abstract fun studyLogDao(): StudyLogDao
 
     companion object {
         @Volatile
