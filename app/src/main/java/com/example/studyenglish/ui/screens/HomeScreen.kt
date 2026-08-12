@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Headset
+import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -41,6 +42,7 @@ fun HomeScreen(
     onOpenStats: () -> Unit,
     onOpenWeakReview: () -> Unit,
     onOpenFavoriteReview: () -> Unit,
+    onOpenCustomWordbooks: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -72,6 +74,12 @@ fun HomeScreen(
                 title = "単語・熟語学習",
                 subtitle = "コース別に単語を学ぶ",
                 onClick = onOpenCourses,
+            )
+            MenuCard(
+                icon = Icons.Filled.LibraryAdd,
+                title = "オリジナル単語帳",
+                subtitle = "CSVを読み込んでオリジナルの単語帳を作成",
+                onClick = onOpenCustomWordbooks,
             )
             MenuCard(
                 icon = Icons.Filled.Headset,

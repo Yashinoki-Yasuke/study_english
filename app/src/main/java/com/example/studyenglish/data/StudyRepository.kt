@@ -12,6 +12,9 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+/** CSVインポート結果（追加件数・不正行のスキップ件数） */
+data class CsvImportResult(val added: Int, val skipped: Int)
+
 /** 学習統計 */
 data class LearnStats(
     val total: Int = 0,
@@ -28,6 +31,52 @@ data class LearnStats(
 class StudyRepository(private val db: AppDatabase) {
 
     fun courses(): Flow<List<Course>> = db.courseDao().getAllCourses()
+
+    /** ユーザーが作成したオリジナル単語帳一覧 */
+    fun customCourses(): Flow<List<Course>> = db.courseDao().getCustomCourses()
+
+    /** オリジナル単語帳（コース）に含まれる単語数 */
+    fun customWordCount(courseId: Long): Flow<Int> = db.wordDao().wordCountByCourse(courseId)
+
+    /**
+     * 新規オリジナル単語帳を作成する。単語帳＝コース1件＋レッスン1件として作成し、
+     * 単語を追加する先となるレッスンIDを返す。
+     */
+    suspend fun createWordbook(name: String): Long {
+        val courseId = db.courseDao().insert(Course(name = name, level = 0, isCustom = true))
+        return db.lessonDao().insert(Lesson(courseId = courseId, title = name, orderIndex = 0))
+    }
+
+    /** オリジナル単語帳（コース）の格納先レッスンIDを取得する */
+    suspend fun wordbookLessonId(courseId: Long): Long? =
+        db.lessonDao().getFirstLessonByCourseOnce(courseId)?.id
+
+    /** オリジナル単語帳を削除する（進捗の孤立レコードも合わせて削除） */
+    suspend fun deleteWordbook(courseId: Long) {
+        db.progressDao().deleteByCourse(courseId)
+        db.courseDao().delete(courseId)
+    }
+
+    /** CSVの各行（生テキスト）をパースして、指定レッスンに単語を追加する */
+    suspend fun importWordsFromCsv(lessonId: Long, lines: List<String>): CsvImportResult {
+        val existingCount = db.wordDao().getWordsByLessonOnce(lessonId).size
+        val parsed = CsvParser.parseWords(lines)
+        if (parsed.rows.isNotEmpty()) {
+            val words = parsed.rows.mapIndexed { index, row ->
+                Word(
+                    lessonId = lessonId,
+                    type = "word",
+                    english = row.english,
+                    japanese = row.japanese,
+                    phonetic = row.phonetic,
+                    example = row.example,
+                    orderIndex = existingCount + index,
+                )
+            }
+            db.wordDao().insertAll(words)
+        }
+        return CsvImportResult(added = parsed.rows.size, skipped = parsed.skipped)
+    }
 
     fun lessons(courseId: Long): Flow<List<Lesson>> =
         db.lessonDao().getLessonsByCourse(courseId)

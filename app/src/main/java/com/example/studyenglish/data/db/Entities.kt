@@ -13,6 +13,8 @@ data class Course(
     /** 並び順（レベルの低い順） */
     val level: Int,
     val description: String? = null,
+    /** ユーザーがCSV等で作成したオリジナル単語帳かどうか */
+    val isCustom: Boolean = false,
 )
 
 /** レッスン（コース内の単語グループ） */

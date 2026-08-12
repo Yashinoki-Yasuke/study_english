@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import com.example.studyenglish.StudyApp
 import com.example.studyenglish.data.StudyRepository
 import com.example.studyenglish.ui.screens.CourseListScreen
+import com.example.studyenglish.ui.screens.CustomWordbookListScreen
 import com.example.studyenglish.ui.screens.HomeScreen
 import com.example.studyenglish.ui.screens.LessonListScreen
 import com.example.studyenglish.ui.screens.ListeningScreen
@@ -32,6 +33,7 @@ fun rememberRepository(): StudyRepository {
 object Routes {
     const val HOME = "home"
     const val COURSES = "courses"
+    const val CUSTOM_WORDBOOKS = "custom_wordbooks"
     const val LESSONS = "lessons/{courseId}/{courseName}"
     const val WORDS = "words/{lessonId}/{lessonTitle}"
     const val STUDY = "study/{lessonId}/{lessonTitle}"
@@ -77,6 +79,15 @@ fun StudyNavHost() {
                 onOpenStats = { navController.navigate(Routes.STATS) },
                 onOpenWeakReview = { navController.navigate(Routes.review("weak")) },
                 onOpenFavoriteReview = { navController.navigate(Routes.review("favorite")) },
+                onOpenCustomWordbooks = { navController.navigate(Routes.CUSTOM_WORDBOOKS) },
+            )
+        }
+        composable(Routes.CUSTOM_WORDBOOKS) {
+            CustomWordbookListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenWordbook = { lessonId, title ->
+                    navController.navigate(Routes.words(lessonId, title))
+                },
             )
         }
         composable(Routes.SETTINGS) {

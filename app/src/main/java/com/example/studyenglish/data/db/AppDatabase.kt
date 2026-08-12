@@ -4,10 +4,19 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+
+/** version9→10: courses に isCustom（オリジナル単語帳フラグ）を追加 */
+private val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE courses ADD COLUMN isCustom INTEGER NOT NULL DEFAULT 0")
+    }
+}
 
 /**
  * バージョン9はストア公開時点の基準スキーマ（app/schemas/.../9.json）。
@@ -19,7 +28,7 @@ import kotlinx.coroutines.launch
  */
 @Database(
     entities = [Course::class, Lesson::class, Word::class, Progress::class, StudyLog::class],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -42,6 +51,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "study_english.db",
                 )
+                    .addMigrations(MIGRATION_9_10)
                     // Migration未実装のバージョン間遷移が発生した場合の最終手段としてのみ機能する
                     // （通常は上記の Migration を正しく追加していれば呼ばれない）。
                     .fallbackToDestructiveMigration()

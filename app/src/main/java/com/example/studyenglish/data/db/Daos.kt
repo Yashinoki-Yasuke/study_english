@@ -8,20 +8,31 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CourseDao {
-    @Query("SELECT * FROM courses ORDER BY level ASC")
+    @Query("SELECT * FROM courses WHERE isCustom = 0 ORDER BY level ASC")
     fun getAllCourses(): Flow<List<Course>>
+
+    /** ユーザー作成のオリジナル単語帳 */
+    @Query("SELECT * FROM courses WHERE isCustom = 1 ORDER BY id DESC")
+    fun getCustomCourses(): Flow<List<Course>>
 
     @Query("SELECT COUNT(*) FROM courses")
     suspend fun count(): Int
 
     @Insert
     suspend fun insert(course: Course): Long
+
+    @Query("DELETE FROM courses WHERE id = :courseId")
+    suspend fun delete(courseId: Long)
 }
 
 @Dao
 interface LessonDao {
     @Query("SELECT * FROM lessons WHERE courseId = :courseId ORDER BY orderIndex ASC")
     fun getLessonsByCourse(courseId: Long): Flow<List<Lesson>>
+
+    /** オリジナル単語帳は1コース1レッスンで運用するため、先頭のレッスンを取得する */
+    @Query("SELECT * FROM lessons WHERE courseId = :courseId LIMIT 1")
+    suspend fun getFirstLessonByCourseOnce(courseId: Long): Lesson?
 
     @Insert
     suspend fun insert(lesson: Lesson): Long
@@ -45,6 +56,13 @@ interface WordDao {
 
     @Query("SELECT COUNT(*) FROM words")
     fun totalCount(): Flow<Int>
+
+    /** オリジナル単語帳（コース）に含まれる単語数 */
+    @Query(
+        "SELECT COUNT(*) FROM words w INNER JOIN lessons l ON w.lessonId = l.id " +
+            "WHERE l.courseId = :courseId"
+    )
+    fun wordCountByCourse(courseId: Long): Flow<Int>
 
     /** 苦手(status=2)の単語をまとめて取得 */
     @Query(
@@ -102,6 +120,14 @@ interface ProgressDao {
 
     @Query("UPDATE progress SET isFavorite = :favorite WHERE wordId = :wordId")
     suspend fun updateFavorite(wordId: Long, favorite: Boolean)
+
+    /** コース削除前に呼び、そのコースの単語に紐づく進捗を削除する（孤立レコード防止） */
+    @Query(
+        "DELETE FROM progress WHERE wordId IN (" +
+            "SELECT w.id FROM words w INNER JOIN lessons l ON w.lessonId = l.id " +
+            "WHERE l.courseId = :courseId)"
+    )
+    suspend fun deleteByCourse(courseId: Long)
 }
 
 @Dao
