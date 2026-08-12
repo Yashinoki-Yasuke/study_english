@@ -20,6 +20,7 @@ import com.example.studyenglish.ui.screens.ReviewScreen
 import com.example.studyenglish.ui.screens.SettingsScreen
 import com.example.studyenglish.ui.screens.StatsScreen
 import com.example.studyenglish.ui.screens.StudyScreen
+import com.example.studyenglish.ui.screens.SubscriptionScreen
 import com.example.studyenglish.ui.screens.VoiceSettingsScreen
 import com.example.studyenglish.ui.screens.WordListScreen
 
@@ -43,6 +44,7 @@ object Routes {
     const val VOICE_SETTINGS = "voice_settings"
     const val STATS = "stats"
     const val REVIEW = "review/{mode}"
+    const val SUBSCRIPTION = "subscription"
 
     fun review(mode: String) = "review/$mode"
 
@@ -88,12 +90,17 @@ fun StudyNavHost() {
                 onOpenWordbook = { lessonId, title ->
                     navController.navigate(Routes.words(lessonId, title))
                 },
+                onOpenSubscription = { navController.navigate(Routes.SUBSCRIPTION) },
             )
+        }
+        composable(Routes.SUBSCRIPTION) {
+            SubscriptionScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onOpenVoiceSettings = { navController.navigate(Routes.VOICE_SETTINGS) },
+                onOpenSubscription = { navController.navigate(Routes.SUBSCRIPTION) },
             )
         }
         composable(Routes.VOICE_SETTINGS) {

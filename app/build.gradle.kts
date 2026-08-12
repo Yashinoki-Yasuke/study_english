@@ -107,5 +107,6 @@ dependencies {
     implementation(libs.androidx.media)
     implementation(libs.play.services.ads)
     implementation(libs.user.messaging.platform)
+    implementation(libs.billing.ktx)
     debugImplementation(libs.androidx.ui.tooling)
 }

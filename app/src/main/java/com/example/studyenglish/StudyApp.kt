@@ -1,6 +1,7 @@
 package com.example.studyenglish
 
 import android.app.Application
+import com.example.studyenglish.billing.BillingManager
 import com.example.studyenglish.data.StudyRepository
 import com.example.studyenglish.data.db.AppDatabase
 
@@ -12,6 +13,8 @@ class StudyApp : Application() {
         super.onCreate()
         // 起動時にDBを初期化（必要なら語彙データを投入）しておく
         database
+        // プレミアム会員（サブスクリプション）の状態を確認
+        BillingManager.initialize(this)
         // 広告SDKの初期化は、同意取得（UMP）後に MainActivity から行う。
         // 同意フォーム表示には Activity が必要なため。
     }

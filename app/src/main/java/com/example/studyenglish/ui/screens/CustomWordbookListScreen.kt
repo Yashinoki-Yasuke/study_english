@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -50,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.studyenglish.billing.BillingManager
 import com.example.studyenglish.data.db.Course
 import com.example.studyenglish.ui.rememberRepository
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +63,14 @@ import kotlinx.coroutines.withContext
 fun CustomWordbookListScreen(
     onBack: () -> Unit,
     onOpenWordbook: (lessonId: Long, title: String) -> Unit,
+    onOpenSubscription: () -> Unit,
 ) {
+    val isPremium by BillingManager.isPremium.collectAsState()
+    if (!isPremium) {
+        WordbookPaywall(onBack = onBack, onOpenSubscription = onOpenSubscription)
+        return
+    }
+
     val repository = rememberRepository()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -176,6 +185,52 @@ fun CustomWordbookListScreen(
                 scope.launch { repository.createWordbook(name) }
             },
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WordbookPaywall(
+    onBack: () -> Unit,
+    onOpenSubscription: () -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("オリジナル単語帳") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
+                    }
+                },
+            )
+        },
+        bottomBar = { BannerAd() },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                Icons.Filled.Lock,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.height(16.dp))
+            Text("プレミアム会員限定の機能です", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "オリジナル単語帳（CSVインポート）は、プレミアム会員（月額サブスクリプション）でご利用いただけます。",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Spacer(Modifier.height(24.dp))
+            Button(onClick = onOpenSubscription) {
+                Text("プレミアム会員について見る")
+            }
+        }
     }
 }
 

@@ -25,6 +25,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.studyenglish.billing.BillingManager
 import com.example.studyenglish.data.SettingsStore
 import com.example.studyenglish.notification.ReminderScheduler
 
@@ -42,7 +44,9 @@ import com.example.studyenglish.notification.ReminderScheduler
 fun SettingsScreen(
     onBack: () -> Unit,
     onOpenVoiceSettings: () -> Unit,
+    onOpenSubscription: () -> Unit,
 ) {
+    val isPremium by BillingManager.isPremium.collectAsState()
     val context = LocalContext.current
     val store = remember { SettingsStore(context) }
 
@@ -105,6 +109,24 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
+            // プレミアム会員
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenSubscription() }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("プレミアム会員", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        if (isPremium) "登録中" else "未登録（オリジナル単語帳・広告非表示）",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                Text("▶", style = MaterialTheme.typography.titleMedium)
+            }
+            HorizontalDivider()
             // リマインドON/OFF
             Row(
                 modifier = Modifier

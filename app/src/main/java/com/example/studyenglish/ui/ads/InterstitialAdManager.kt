@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import com.example.studyenglish.BuildConfig
+import com.example.studyenglish.billing.BillingManager
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -27,6 +28,7 @@ object InterstitialAdManager {
 
     /** 事前読み込み（画面表示時などに呼ぶ） */
     fun preload(context: Context) {
+        if (BillingManager.isPremium.value) return
         if (ad != null || loading) return
         loading = true
         InterstitialAd.load(
@@ -52,6 +54,10 @@ object InterstitialAdManager {
      * 何もせず onDone() を呼ぶ。表示した場合は閉じたあとに onDone() を呼ぶ。
      */
     fun maybeShow(context: Context, onDone: () -> Unit) {
+        if (BillingManager.isPremium.value) {
+            onDone()
+            return
+        }
         val activity = context.findActivity()
         val current = ad
         val now = System.currentTimeMillis()
