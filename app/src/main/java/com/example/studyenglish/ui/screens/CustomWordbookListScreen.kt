@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -89,6 +90,17 @@ fun CustomWordbookListScreen(
         }
     }
 
+    val templateSaver = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            scope.launch {
+                withContext(Dispatchers.IO) { writeCsvTemplate(context, uri) }
+                snackbarHostState.showSnackbar("CSVテンプレートを保存しました")
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -96,6 +108,11 @@ fun CustomWordbookListScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { templateSaver.launch("wordbook_template.csv") }) {
+                        Icon(Icons.Filled.Download, contentDescription = "CSVテンプレートを保存")
                     }
                 },
             )
@@ -122,6 +139,12 @@ fun CustomWordbookListScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
+                Spacer(Modifier.height(16.dp))
+                OutlinedButton(onClick = { templateSaver.launch("wordbook_template.csv") }) {
+                    Icon(Icons.Filled.Download, contentDescription = null)
+                    Spacer(Modifier.size(4.dp))
+                    Text("CSVテンプレートを保存")
+                }
             }
         } else {
             LazyColumn(
@@ -259,4 +282,18 @@ private fun readCsvLines(context: Context, uri: Uri): List<String> {
         if (text.isNotEmpty() && text[0].code == 0xFEFF) text = text.substring(1)
         text.lines()
     } ?: emptyList()
+}
+
+/** インポート用CSVのフォーマット見本（記入例つき） */
+private const val CSV_TEMPLATE_CONTENT =
+    "english,japanese,phonetic,example\n" +
+        "apple,りんご,/ˈæpl/,I eat an apple every day.\n" +
+        "run,走る,/rʌn/,I run every morning.\n"
+
+/** テンプレートCSVを書き出す（Excel等での文字化けを避けるためBOM付きUTF-8で保存） */
+private fun writeCsvTemplate(context: Context, uri: Uri) {
+    context.contentResolver.openOutputStream(uri)?.use { out ->
+        out.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())) // UTF-8 BOM
+        out.write(CSV_TEMPLATE_CONTENT.toByteArray(Charsets.UTF_8))
+    }
 }
