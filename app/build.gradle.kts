@@ -83,6 +83,12 @@ android {
     }
 }
 
+ksp {
+    // Room のスキーマ履歴を app/schemas に出力する。
+    // 将来のバージョンアップ時に Migration を書く／テストするために必要。
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

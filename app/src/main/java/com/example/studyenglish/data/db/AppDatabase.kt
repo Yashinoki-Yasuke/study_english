@@ -9,10 +9,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
+/**
+ * バージョン9はストア公開時点の基準スキーマ（app/schemas/.../9.json）。
+ *
+ * 【重要】公開後に version を上げるときは、必ず Migration(oldVersion, newVersion) を
+ * 実装して build() に .addMigrations(...) で追加すること。Migration を用意せずに
+ * バージョンだけ上げると、fallbackToDestructiveMigration() によって
+ * 既存ユーザーの学習データ（進捗・お気に入り・統計）が全消去される。
+ */
 @Database(
     entities = [Course::class, Lesson::class, Word::class, Progress::class, StudyLog::class],
     version = 9,
-    exportSchema = false,
+    exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun courseDao(): CourseDao
@@ -34,7 +42,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "study_english.db",
                 )
-                    // 開発中はスキーマ変更時に作り直す（リリース前のため）
+                    // Migration未実装のバージョン間遷移が発生した場合の最終手段としてのみ機能する
+                    // （通常は上記の Migration を正しく追加していれば呼ばれない）。
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = db
