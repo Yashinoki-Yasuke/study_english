@@ -25,6 +25,16 @@ private val MIGRATION_9_10 = object : Migration(9, 10) {
  * 実装して build() に .addMigrations(...) で追加すること。Migration を用意せずに
  * バージョンだけ上げると、fallbackToDestructiveMigration() によって
  * 既存ユーザーの学習データ（進捗・お気に入り・統計）が全消去される。
+ *
+ * 【内蔵語彙データ(vocab.json)を将来更新する場合の注意】
+ * courses/lessons/words はオリジナル単語帳（Course.isCustom=true）と
+ * テーブルを共有している。IDはSQLiteの自動採番のためオリジナル単語帳の
+ * 単語と衝突することは無いが、以下は必ず守ること:
+ *  - 削除/更新のSQLは必ず `WHERE courseId IN (SELECT id FROM courses WHERE isCustom = 0)`
+ *    等で内蔵データのみに絞る（絞り忘れるとユーザーのオリジナル単語帳を巻き込んで消す）。
+ *  - 既存の内蔵単語の翻訳修正等は、削除→再挿入ではなく UPDATE 文で同じ id の行を
+ *    書き換えること。削除→再挿入すると id が変わり、その単語に紐づく学習進捗
+ *    （覚えた/苦手/お気に入り）が孤立・リセットされてしまう。
  */
 @Database(
     entities = [Course::class, Lesson::class, Word::class, Progress::class, StudyLog::class],
