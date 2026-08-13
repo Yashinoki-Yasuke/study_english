@@ -22,7 +22,10 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.studyenglish"
+        // Play Console / ストアで公開されるアプリID。
+        // ソースコードのパッケージ(namespace)は com.example.studyenglish のままだが、
+        // 外部から見える識別子はこちらの applicationId のみが使われる。
+        applicationId = "com.yashinoki.kikumiru"
         minSdk = 35
         targetSdk = 36
         versionCode = 1
